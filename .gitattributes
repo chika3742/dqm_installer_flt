@@ -1,1 +1,1 @@
-bin/* linguist-detectable=false
+bin/** linguist-detectable=false
