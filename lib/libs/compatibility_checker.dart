@@ -63,8 +63,11 @@ class CompatibilityChecker {
         if (split.length >= 2 && int.parse(split[1]) < 6) {
           continue;
         }
-        incompatibleProfiles
-            .add(entry.name.isNotEmpty ? entry.name : "最新のリリース");
+        incompatibleProfiles.add(entry.type == "latest-release"
+            ? "最新のリリース"
+            : entry.name.isEmpty
+                ? "無題"
+                : entry.name);
       }
     }
   }
