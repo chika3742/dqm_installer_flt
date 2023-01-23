@@ -120,9 +120,15 @@ class _HomePageState extends State<HomePage> {
                           }
                         : null,
                     child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
+                      duration: const Duration(milliseconds: 100),
                       child: creating152Profile
-                          ? const CircularProgressIndicator()
+                          ? Container(
+                              width: 30,
+                              height: 30,
+                              padding: const EdgeInsets.all(6),
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 3, color: Colors.amber.shade700),
+                            )
                           : const Text("プロファイルを作成する"),
                     ),
                   ),
@@ -210,7 +216,7 @@ class _HomePageState extends State<HomePage> {
                         "https://www.chikach.net/category/info/dqm-recommended-mods/");
                   },
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 const Text("上記リンク先に導入方法の説明も記載されています。"),
               ],
             ),
