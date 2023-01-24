@@ -37,7 +37,9 @@ class CompatibilityChecker {
 
   Future<void> check() async {
     await _checkProfileFileExists();
-    await _checkGameDir();
+    if (profileFileExists) {
+      await _checkGameDir();
+    }
     await _checkIfDirectoriesEmpty();
   }
 
@@ -67,7 +69,7 @@ class CompatibilityChecker {
             ? "最新のリリース"
             : entry.name.isEmpty
                 ? "無題"
-                : entry.name);
+                : "${entry.name} (${entry.lastVersionId})");
       }
     }
   }
