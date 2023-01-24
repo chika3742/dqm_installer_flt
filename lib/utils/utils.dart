@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 
 String getMinecraftDirectoryPath() {
   if (Platform.isWindows) {
@@ -15,6 +16,11 @@ String getMinecraftDirectoryPath() {
     return path.join(Platform.environment["HOME"]!, ".minecraft");
   }
   throw UnsupportedError("Unsupported Platform");
+}
+
+Future<String> getTempPath() async {
+  return path.join(
+      (await getTemporaryDirectory()).path, "net.chikach.dqmInstallerFlt");
 }
 
 void showSnackBar(BuildContext context, String message,
