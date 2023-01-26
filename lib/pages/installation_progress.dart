@@ -44,6 +44,7 @@ class _InstallationProgressPageState extends State<InstallationProgressPage> {
       bodyModPath: widget.arguments.bodyModPath,
       bgmPath: widget.arguments.bgmPath,
       forgePath: widget.arguments.forgePath,
+      skinPath: widget.arguments.skinPath,
     );
     installer.install().then((value) {
       showDialog(
