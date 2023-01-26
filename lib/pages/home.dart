@@ -239,7 +239,7 @@ class _HomePageState extends State<HomePage> {
                                       onPressed: () {
                                         Navigator.pop(context);
                                       },
-                                    )
+                                    ),
                                   ],
                                 );
                               });
@@ -266,11 +266,42 @@ class _HomePageState extends State<HomePage> {
                           return;
                         }
 
+                        await checker.check();
+
+                        if (checker.hasError) {
+                          final result = await showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: const Text("確認"),
+                                  content: const Text(
+                                      "Step 1の環境チェックにエラーがあります。続行しますか?"),
+                                  actions: [
+                                    TextButton(
+                                      child: const Text("キャンセル"),
+                                      onPressed: () {
+                                        Navigator.pop(context, false);
+                                      },
+                                    ),
+                                    TextButton(
+                                      child: const Text("OK"),
+                                      onPressed: () {
+                                        Navigator.pop(context, true);
+                                      },
+                                    ),
+                                  ],
+                                );
+                              });
+                          if (result != true) {
+                            return;
+                          }
+                        }
+
                         if (mounted) {
                           Navigator.pushNamed(context, "/install",
                               arguments: InstallationProgressPageArguments(
                                 prerequisiteModPath:
-                                _prerequisiteModController.text,
+                                    _prerequisiteModController.text,
                                 bodyModPath: _bodyModController.text,
                                 bgmPath: _bgmController.text,
                                 forgePath: _forgeController.text,
