@@ -68,13 +68,28 @@ class _InstallationProgressPageState extends State<InstallationProgressPage> {
       debugPrint(e.toString());
       debugPrintStack(stackTrace: st);
 
+      final String errorMessage;
+
+      if (e is DqmInstallationException) {
+        switch(e.code) {
+          case DqmInstallationError.failedToParseDqmType:
+            errorMessage = "DQMの種類またはバージョンの認識に失敗しました。MODファイル名を変更していませんか？";
+            break;
+          case DqmInstallationError.failedToDownloadAsset:
+            errorMessage = "必要なファイルのダウンロードに失敗しました。ネットワーク接続をご確認ください。";
+            break;
+        }
+      } else {
+        errorMessage = "インストール中にエラーが発生しました。(${e.toString()})";
+      }
+
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) {
           return AlertDialog(
             title: const Text("エラー"),
-            content: Text("インストール中にエラーが発生しました。(${e.toString()})"),
+            content: Text(errorMessage),
             actions: [
               TextButton(
                 child: const Text("OK"),
