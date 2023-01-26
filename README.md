@@ -4,7 +4,7 @@ DQM Installer (Flutterリメイク)
 
 ## ダウンロード
 
-[Releases](/releases)
+[Releases](https://github.com/chika3742/dqm_installer_flt/releases)
 
 ## 利用方法
 
