@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:archive/archive_io.dart';
 import 'package:dqm_installer_flt/libs/profiles.dart';
+import 'package:dqm_installer_flt/pages/home.dart';
 import 'package:dqm_installer_flt/utils/utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
@@ -22,6 +23,7 @@ class Installer {
   final String bgmPath;
   final String forgePath;
   final String skinPath;
+  final List<AdditionalMod> additionalMods;
 
   Installer({
     this.onProgressChanged,
@@ -30,6 +32,7 @@ class Installer {
     required this.bgmPath,
     required this.forgePath,
     required this.skinPath,
+    required this.additionalMods,
   }) {
     procedure = [
       _DownloadRequiredFiles(this),
@@ -130,6 +133,11 @@ class _DownloadRequiredFiles extends Procedure {
   Future<void> execute() async {
     super.execute();
 
+    assetsToDownload.addAll(installer.additionalMods
+        .map((e) => e.toFiles())
+        .expand((e) => e)
+        .toList());
+
     var tempPath = await getTempPath();
     final totalBytes = assetsToDownload.fold(
         0, (value, element) => value + element.contentLength);
@@ -141,7 +149,7 @@ class _DownloadRequiredFiles extends Procedure {
       // local file sink
       final file = await File(path.join(
         tempPath,
-        path.basename(asset.url.path),
+        path.basename(Uri.decodeComponent(asset.url.path)),
       )).create(recursive: true);
       final fileSink = file.openWrite();
 
@@ -189,7 +197,26 @@ class _CopyRequiredFiles extends Procedure {
           getMinecraftDirectoryPath(), "assets", "indexes", "legacy.json"),
     };
 
-    // copy files
+    for (var e in installer.additionalMods) {
+      var modFileName = path.basename(Uri.decodeComponent(e.mod.url.path));
+      filesToCopy[path.join(await getTempPath(), modFileName)] = path.join(
+        getMinecraftDirectoryPath(),
+        "mods",
+        modFileName,
+      );
+
+      if (e.coreMod != null) {
+        final coreModFileName =
+            path.basename(Uri.decodeComponent(e.coreMod!.url.path));
+        filesToCopy[path.join(await getTempPath(), coreModFileName)] =
+            path.join(
+          getMinecraftDirectoryPath(),
+          "coremods",
+          coreModFileName,
+        );
+      }
+    }
+
     for (var i = 0; i < filesToCopy.length; i++) {
       var entry = filesToCopy.entries.toList()[i];
       await Directory(path.dirname(entry.value)).create(recursive: true);
