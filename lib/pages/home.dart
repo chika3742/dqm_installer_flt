@@ -7,6 +7,7 @@ import 'package:dqm_installer_flt/utils/precondition.dart';
 import 'package:dqm_installer_flt/utils/utils.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as path;
 import 'package:timelines/timelines.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -181,7 +182,36 @@ class _HomePageState extends State<HomePage> {
               contents: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    ElevatedButton(
+                      child: const Text("フォルダーから自動的に認識"),
+                      onPressed: () async {
+                        var result =
+                            await FilePicker.platform.getDirectoryPath();
+
+                        if (result != null) {
+                          Directory(result).list().listen((event) {
+                            var fileName =
+                                path.basenameWithoutExtension(event.path);
+                            if (fileName.contains("DQM") &&
+                                fileName.contains("jar")) {
+                              _prerequisiteModController.text = event.path;
+                            } else if (fileName.contains("DQM") &&
+                                fileName.contains("mods")) {
+                              _bodyModController.text = event.path;
+                            } else if (fileName.contains("DQM") &&
+                                fileName.contains("音声")) {
+                              _bgmController.text = event.path;
+                            } else if (fileName ==
+                                "forge-1.5.2-7.8.1.738-universal") {
+                              _forgeController.text = event.path;
+                            }
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
                     _FileFormField(
                       label: "DQM 前提MOD",
                       controller: _prerequisiteModController,
@@ -246,13 +276,14 @@ class _HomePageState extends State<HomePage> {
                           return;
                         }
 
-                        if (await check152JarExists()) {
+                        if (!await check152JarExists()) {
                           showDialog(
                               context: context,
                               builder: (context) {
                                 return AlertDialog(
                                   title: const Text("エラー"),
-                                  content: const Text("Step 2、Step 3を踏んでから再度お試しください。"),
+                                  content: const Text(
+                                      "Step 2、Step 3を踏んでから再度お試しください。"),
                                   actions: [
                                     TextButton(
                                       child: const Text("OK"),
