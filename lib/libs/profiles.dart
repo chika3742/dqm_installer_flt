@@ -34,7 +34,7 @@ class MinecraftProfile {
 
 class MinecraftProfileEntry {
   final String created;
-  final String icon;
+  final String? icon;
   final String lastVersionId;
   final String name;
   final String type;
