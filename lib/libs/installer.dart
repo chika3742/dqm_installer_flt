@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:archive/archive_io.dart';
+import 'package:dqm_installer_flt/libs/profiles.dart';
 import 'package:dqm_installer_flt/utils/utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
@@ -30,9 +32,12 @@ class Installer {
     procedure = [
       _DownloadRequiredFiles(this),
       _CopyRequiredFiles(this),
-      // _createDqmVersionEntry,
-      // _createDqmExecutable,
-      // _copyModFiles,
+      _ExtractFiles(this),
+      _CompressFiles(this),
+      _ExtractVanillaSe(this),
+      _ExtractLibs(this),
+      _CreateDqmProfile(this),
+      _Cleanup(this),
     ];
   }
 
@@ -97,6 +102,8 @@ class _DownloadRequiredFiles extends Procedure {
   final List<DownloadableAsset> assetsToDownload = [
     DownloadableAsset(
         Uri.parse("https://r2.chikach.net/dqm-assets/dqm4.json"), 0),
+    DownloadableAsset(
+        Uri.parse("https://r2.chikach.net/dqm-assets/legacy.json"), 0),
     DownloadableAsset(
         Uri.parse("https://r2.chikach.net/dqm-assets/steve.png"), 1284),
     DownloadableAsset(
@@ -169,6 +176,8 @@ class _CopyRequiredFiles extends Procedure {
               installer.versionName, "${installer.versionName}.jar"),
       installer.bodyModPath: path.join(getMinecraftDirectoryPath(), "mods",
           path.basename(installer.bodyModPath)),
+      path.join(await getTempPath(), "legacy.json"): path.join(
+          getMinecraftDirectoryPath(), "assets", "indexes", "legacy.json"),
     };
 
     // copy files
@@ -190,6 +199,218 @@ class _CopyRequiredFiles extends Procedure {
       installer.versionName,
       "${installer.versionName}.json",
     )).writeAsString(const JsonEncoder.withIndent("  ").convert(decoded));
+  }
+}
+
+class _ExtractFiles extends Procedure {
+  _ExtractFiles(Installer installer) : super(installer);
+
+  @override
+  String get procedureTitle => "前提MODとForgeを展開しています。";
+
+  @override
+  Future<void> execute() async {
+    super.execute();
+    final decoder = ZipDecoder();
+    final mcJarPath = path.join(
+      getMinecraftDirectoryPath(),
+      "versions",
+      installer.versionName,
+      "${installer.versionName}.jar",
+    );
+
+    final mcJarStream = InputFileStream(mcJarPath);
+    final preModStream = InputFileStream(installer.prerequisiteModPath);
+    final forgeStream = InputFileStream(installer.forgePath);
+    final files = [
+      ...decoder.decodeBuffer(mcJarStream).files,
+      ...decoder.decodeBuffer(forgeStream).files,
+      ...decoder.decodeBuffer(preModStream).files,
+    ];
+
+    var fileCount = 0;
+
+    for (var file in files) {
+      if (file.isFile) {
+        final outputStream = OutputFileStream(path.join(
+          await getTempPath(),
+          "extracted",
+          "jar",
+          file.name,
+        ));
+        file.writeContent(outputStream);
+        await outputStream.close();
+      }
+      fileCount++;
+      progress = fileCount / files.length;
+      installer.updateProgress();
+    }
+    await preModStream.close();
+    await forgeStream.close();
+    await preModStream.close();
+  }
+}
+
+class _CompressFiles extends Procedure {
+  _CompressFiles(Installer installer) : super(installer);
+
+  @override
+  String get procedureTitle => "Minecraft実行ファイルを作成しています";
+
+  @override
+  Future<void> execute() async {
+    super.execute();
+
+    await Directory(path.join(
+      await getTempPath(),
+      "extracted",
+      "jar",
+      "META-INF",
+    )).delete(recursive: true);
+
+    final encoder = ZipFileEncoder();
+    final dir = Directory(path.join(
+      await getTempPath(),
+      "extracted",
+      "jar",
+    ));
+
+    encoder.create(path.join(
+      getMinecraftDirectoryPath(),
+      "versions",
+      installer.versionName,
+      "${installer.versionName}.jar",
+    ));
+    await encoder.addDirectory(dir, includeDirName: false, level: 1);
+    encoder.close();
+
+    progress = 1;
+    installer.updateProgress();
+  }
+}
+
+class _ExtractVanillaSe extends Procedure {
+  _ExtractVanillaSe(Installer installer) : super(installer);
+
+  @override
+  String get procedureTitle => "BGM/SEを展開しています。";
+
+  @override
+  Future<void> execute() async {
+    super.execute();
+    final decoder = ZipDecoder();
+
+    final vanillaSeStream =
+        InputFileStream(path.join(await getTempPath(), "resources.zip"));
+
+    final bgmStream = InputFileStream(installer.bgmPath);
+
+    final files = [
+      ...decoder.decodeBuffer(vanillaSeStream).files,
+      ...decoder.decodeBuffer(bgmStream).files,
+    ];
+
+    var fileCount = 0;
+
+    for (var file in files) {
+      if (file.isFile) {
+        final outputStream = OutputFileStream(path.join(
+          getMinecraftDirectoryPath(),
+          file.name,
+        ));
+        file.writeContent(outputStream);
+        await outputStream.close();
+      }
+      fileCount++;
+      progress = fileCount / files.length;
+      installer.updateProgress();
+    }
+    await vanillaSeStream.close();
+    await bgmStream.close();
+  }
+}
+
+class _ExtractLibs extends Procedure {
+  _ExtractLibs(Installer installer) : super(installer);
+
+  @override
+  String get procedureTitle => "libファイルを展開しています。";
+
+  @override
+  Future<void> execute() async {
+    super.execute();
+    final decoder = ZipDecoder();
+
+    final libStream =
+        InputFileStream(path.join(await getTempPath(), "fml_libs15.zip"));
+
+    var fileCount = 0;
+
+    var files = decoder.decodeBuffer(libStream).files;
+    for (var file in files) {
+      if (file.isFile) {
+        final outputStream = OutputFileStream(path.join(
+          getMinecraftDirectoryPath(),
+          "lib",
+          file.name,
+        ));
+        file.writeContent(outputStream);
+        await outputStream.close();
+      }
+      fileCount++;
+      progress = fileCount / files.length;
+      installer.updateProgress();
+    }
+    await libStream.close();
+
+    await File(path.join(
+      await getTempPath(),
+      "deobfuscation_data_1.5.2.zip",
+    )).copy(path.join(
+        getMinecraftDirectoryPath(), "lib", "deobfuscation_data_1.5.2.zip"));
+  }
+}
+
+class _CreateDqmProfile extends Procedure {
+  _CreateDqmProfile(Installer installer) : super(installer);
+
+  @override
+  String get procedureTitle => "DQMプロファイルを作成しています。";
+
+  @override
+  Future<void> execute() async {
+    super.execute();
+
+    final profileData = await MinecraftProfile().parse();
+    profileData["profiles"][installer.type.toNameString()] =
+        MinecraftProfileEntry(
+      created: DateTime.now().toIso8601String(),
+      icon: "Carved_Pumpkin",
+      lastVersionId: installer.versionName,
+      name: installer.versionName,
+      type: "custom",
+    ).toMap();
+    await MinecraftProfile().save(profileData);
+
+    progress = 1;
+    installer.updateProgress();
+  }
+}
+
+class _Cleanup extends Procedure {
+  _Cleanup(Installer installer) : super(installer);
+
+  @override
+  String get procedureTitle => "クリーンアップしています。";
+
+  @override
+  Future<void> execute() async {
+    super.execute();
+
+    await Directory(await getTempPath()).delete(recursive: true);
+
+    progress = 1;
+    installer.updateProgress();
   }
 }
 

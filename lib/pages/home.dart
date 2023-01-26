@@ -26,6 +26,7 @@ class _HomePageState extends State<HomePage> {
   final _bodyModController = TextEditingController();
   final _bgmController = TextEditingController();
   final _forgeController = TextEditingController();
+  final _skinController = TextEditingController();
 
   @override
   void initState() {
@@ -199,6 +200,12 @@ class _HomePageState extends State<HomePage> {
                       label: "Forge",
                       controller: _forgeController,
                     ),
+                    const SizedBox(height: 16),
+                    _FileFormField(
+                      label: "スキン (任意)",
+                      hint: "デフォルト (Steve)",
+                      controller: _skinController,
+                    ),
                   ],
                 ),
               ),
@@ -210,7 +217,39 @@ class _HomePageState extends State<HomePage> {
                     width: 200,
                     child: ElevatedButton(
                       child: const Text("インストール開始"),
-                      onPressed: () {
+                      onPressed: () async {
+                        final files = [
+                          _prerequisiteModController.text,
+                          _bodyModController.text,
+                          _bgmController.text,
+                          _forgeController.text,
+                        ];
+
+                        if ((await Future.wait(files
+                                    .map((e) => File(e).exists())
+                                    .toList()))
+                                .any((e) => !e) ||
+                            (_skinController.text.isNotEmpty &&
+                                !await File(_skinController.text).exists())) {
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: const Text("エラー"),
+                                  content: const Text("指定されたファイルの一部が存在しません。"),
+                                  actions: [
+                                    TextButton(
+                                      child: const Text("OK"),
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                    )
+                                  ],
+                                );
+                              });
+                          return;
+                        }
+
                         Navigator.pushNamed(context, "/install",
                             arguments: InstallationProgressPageArguments(
                               prerequisiteModPath:
@@ -218,6 +257,7 @@ class _HomePageState extends State<HomePage> {
                               bodyModPath: _bodyModController.text,
                               bgmPath: _bgmController.text,
                               forgePath: _forgeController.text,
+                              skinPath: _skinController.text,
                             ));
                       },
                     ),
@@ -317,10 +357,11 @@ class _InstallationFlow {
 
 class _FileFormField extends StatelessWidget {
   const _FileFormField(
-      {Key? key, required this.label, required this.controller})
+      {Key? key, required this.label, this.hint, required this.controller})
       : super(key: key);
 
   final String label;
+  final String? hint;
   final TextEditingController controller;
 
   @override
@@ -333,6 +374,7 @@ class _FileFormField extends StatelessWidget {
             decoration: InputDecoration(
               border: const OutlineInputBorder(),
               label: Text(label),
+              hintText: hint,
             ),
           ),
         ),
