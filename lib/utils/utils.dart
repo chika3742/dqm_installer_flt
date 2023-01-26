@@ -5,7 +5,7 @@ import 'package:path/path.dart' as path;
 
 String getMinecraftDirectoryPath() {
   if (Platform.isWindows) {
-    return "%USERPROFILE%\\AppData\\Roaming\\.minecraft";
+    return path.join(Platform.environment["APPDATA"]!, ".minecraft");
   }
   if (Platform.isMacOS) {
     return path.join(
