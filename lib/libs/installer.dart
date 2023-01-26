@@ -21,6 +21,7 @@ class Installer {
   final String bodyModPath;
   final String bgmPath;
   final String forgePath;
+  final String skinPath;
 
   Installer({
     this.onProgressChanged,
@@ -28,6 +29,7 @@ class Installer {
     required this.bodyModPath,
     required this.bgmPath,
     required this.forgePath,
+    required this.skinPath,
   }) {
     procedure = [
       _DownloadRequiredFiles(this),
@@ -66,7 +68,7 @@ class Installer {
       type = DqmType.dqm4;
     } else if (modFileName.contains("DQMV")) {
       type = DqmType.dqm5;
-    } else if (modFileName.contains("不思議のダンジョン")) {
+    } else if (modFileName.contains("不思議の")) {
       type = DqmType.dqmDungeon;
     } else {
       throw DqmInstallationException(DqmInstallationError.failedToParseDqmType);
@@ -255,6 +257,29 @@ class _ExtractFiles extends Procedure {
     await preModStream.close();
     await forgeStream.close();
     await preModStream.close();
+
+    final accountsData = json.decode(await File(path.join(
+      getMinecraftDirectoryPath(),
+      "launcher_accounts.json",
+    )).readAsString());
+    final accounts = accountsData["accounts"] as Map<String, dynamic>;
+    final usernames = accounts.values.map((e) => e["minecraftProfile"]["name"]);
+
+    for (var username in usernames) {
+      File(installer.skinPath.isNotEmpty
+              ? installer.skinPath
+              : path.join(
+                  await getTempPath(),
+                  "steve.png",
+                ))
+          .copy(path.join(
+        await getTempPath(),
+        "extracted",
+        "jar",
+        "mob",
+        "$username.png",
+      ));
+    }
   }
 }
 
