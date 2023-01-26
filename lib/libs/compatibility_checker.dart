@@ -37,7 +37,9 @@ class CompatibilityChecker {
 
   Future<void> check() async {
     await _checkProfileFileExists();
-    await _checkGameDir();
+    if (profileFileExists) {
+      await _checkGameDir();
+    }
     await _checkIfDirectoriesEmpty();
   }
 
@@ -63,8 +65,11 @@ class CompatibilityChecker {
         if (split.length >= 2 && int.parse(split[1]) < 6 || entry.lastVersionId.contains("DQM")) {
           continue;
         }
-        incompatibleProfiles
-            .add(entry.name.isNotEmpty ? entry.name : "最新のリリース");
+        incompatibleProfiles.add(entry.type == "latest-release"
+            ? "最新のリリース"
+            : entry.name.isEmpty
+                ? "無題"
+                : "${entry.name} (${entry.lastVersionId})");
       }
     }
   }

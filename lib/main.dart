@@ -1,4 +1,5 @@
 import 'package:dqm_installer_flt/pages/home.dart';
+import 'package:dqm_installer_flt/pages/installation_progress.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -18,7 +19,11 @@ class MyApp extends StatelessWidget {
       locale: const Locale("ja"),
       initialRoute: "/",
       routes: {
-        HomePage.routeName: (_) => const HomePage()
+        HomePage.routeName: (_) => const HomePage(),
+        InstallationProgressPage.routeName: (ctx) => InstallationProgressPage(
+              ModalRoute.of(ctx)!.settings.arguments
+                  as InstallationProgressPageArguments,
+            ),
       },
     );
   }
