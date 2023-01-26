@@ -25,11 +25,11 @@ class CompatibilityChecker {
     }
     if (incompatibleProfiles.isNotEmpty) {
       builder.writeln(
-          "以下のプロファイルにゲームディレクトリが設定されていません。: ${incompatibleProfiles.join(", ")}");
+          "以下のプロファイルにゲームディレクトリを設定してください。: ${incompatibleProfiles.join(", ")}");
     }
     if (directoriesNotEmpty.isNotEmpty) {
       builder.writeln(
-          "以下のフォルダーが空ではありません。必要なファイルが入っている場合はバックアップを取ってください。: ${directoriesNotEmpty.join(", ")}");
+          "以下のフォルダーを空にしてください。必要なファイルが入っている場合はバックアップを取ってください。: ${directoriesNotEmpty.join(", ")}");
     }
 
     return builder.toString().trim();
