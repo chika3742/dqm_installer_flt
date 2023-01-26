@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dqm_installer_flt/libs/compatibility_checker.dart';
 import 'package:dqm_installer_flt/libs/profiles.dart';
 import 'package:dqm_installer_flt/pages/installation_progress.dart';
+import 'package:dqm_installer_flt/utils/precondition.dart';
 import 'package:dqm_installer_flt/utils/utils.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -225,12 +226,7 @@ class _HomePageState extends State<HomePage> {
                           _forgeController.text,
                         ];
 
-                        if ((await Future.wait(files
-                                    .map((e) => File(e).exists())
-                                    .toList()))
-                                .any((e) => !e) ||
-                            (_skinController.text.isNotEmpty &&
-                                !await File(_skinController.text).exists())) {
+                        if (await checkAllModFilesExist(files, _skinController.text)) {
                           showDialog(
                               context: context,
                               builder: (context) {
@@ -250,15 +246,37 @@ class _HomePageState extends State<HomePage> {
                           return;
                         }
 
-                        Navigator.pushNamed(context, "/install",
-                            arguments: InstallationProgressPageArguments(
-                              prerequisiteModPath:
-                                  _prerequisiteModController.text,
-                              bodyModPath: _bodyModController.text,
-                              bgmPath: _bgmController.text,
-                              forgePath: _forgeController.text,
-                              skinPath: _skinController.text,
-                            ));
+                        if (await check152JarExists()) {
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: const Text("エラー"),
+                                  content: const Text("Step 2、Step 3を踏んでから再度お試しください。"),
+                                  actions: [
+                                    TextButton(
+                                      child: const Text("OK"),
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                    )
+                                  ],
+                                );
+                              });
+                          return;
+                        }
+
+                        if (mounted) {
+                          Navigator.pushNamed(context, "/install",
+                              arguments: InstallationProgressPageArguments(
+                                prerequisiteModPath:
+                                _prerequisiteModController.text,
+                                bodyModPath: _bodyModController.text,
+                                bgmPath: _bgmController.text,
+                                forgePath: _forgeController.text,
+                                skinPath: _skinController.text,
+                              ));
+                        }
                       },
                     ),
                   ),

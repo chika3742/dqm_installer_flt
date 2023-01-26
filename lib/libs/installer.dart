@@ -52,6 +52,15 @@ class Installer {
   }
 
   Future<void> install() async {
+    _parseDqmType();
+    _parseDqmVersion();
+
+    for (var item in procedure) {
+      await item.execute();
+    }
+  }
+
+  void _parseDqmType() {
     var modFileName = path.basename(bodyModPath);
     if (modFileName.contains("DQMIV")) {
       type = DqmType.dqm4;
@@ -62,19 +71,17 @@ class Installer {
     } else {
       throw DqmInstallationException(DqmInstallationError.failedToParseDqmType);
     }
+  }
 
+  void _parseDqmVersion() {
+    var modFileName = path.basename(bodyModPath);
     final match = RegExp("Ver\\.*(\\d+\\.\\d+)").firstMatch(modFileName);
     if (match == null || match.group(1) == null) {
       throw DqmInstallationException(DqmInstallationError.failedToParseDqmType);
     }
-
     dqmVersion = match.group(1)!;
 
     versionName = "${type.toNameString()} v$dqmVersion";
-
-    for (var item in procedure) {
-      await item.execute();
-    }
   }
 }
 
