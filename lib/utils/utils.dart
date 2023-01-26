@@ -18,6 +18,16 @@ String getMinecraftDirectoryPath() {
   throw UnsupportedError("Unsupported Platform");
 }
 
+Future<String> getLauncherAccountsPath() async {
+  if (Platform.isWindows) {
+    final microsoftStorePath = path.join(getMinecraftDirectoryPath(), "launcher_accounts_microsoft_store.json");
+    if (await File(microsoftStorePath).exists()) {
+      return microsoftStorePath;
+    }
+  }
+  return path.join(getMinecraftDirectoryPath(), "launcher_accounts.json");
+}
+
 Future<String> getTempPath() async {
   return path.join(
       (await getTemporaryDirectory()).path, "net.chikach.dqmInstallerFlt");

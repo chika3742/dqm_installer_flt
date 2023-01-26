@@ -285,10 +285,9 @@ class _ExtractFiles extends Procedure {
     await forgeStream.close();
     await preModStream.close();
 
-    final accountsData = json.decode(await File(path.join(
-      getMinecraftDirectoryPath(),
-      "launcher_accounts.json",
-    )).readAsString());
+    final accountsData = json.decode(
+      await File(await getLauncherAccountsPath()).readAsString(),
+    );
     final accounts = accountsData["accounts"] as Map<String, dynamic>;
     final usernames = accounts.values.map((e) => e["minecraftProfile"]["name"]);
 
