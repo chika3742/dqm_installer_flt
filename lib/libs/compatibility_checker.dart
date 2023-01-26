@@ -60,7 +60,7 @@ class CompatibilityChecker {
         }
       } else if (entry.gameDir == null) {
         var split = entry.lastVersionId.split(".");
-        if (split.length >= 2 && int.parse(split[1]) < 6) {
+        if (split.length >= 2 && int.parse(split[1]) < 6 || entry.lastVersionId.contains("DQM")) {
           continue;
         }
         incompatibleProfiles
