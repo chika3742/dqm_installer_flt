@@ -15,6 +15,7 @@ class MyApp extends StatelessWidget {
       title: 'DQM Installer',
       theme: ThemeData(
         primarySwatch: Colors.amber,
+        fontFamily: "MPLUS1p",
       ),
       locale: const Locale("ja"),
       initialRoute: "/",
