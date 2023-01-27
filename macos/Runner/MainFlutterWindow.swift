@@ -10,14 +10,6 @@ class MainFlutterWindow: NSWindow {
 
     RegisterGeneratedPlugins(registry: flutterViewController)
       
-      setupUtilsApi(binaryMessenger: flutterViewController.engine.binaryMessenger, api: UtilsApi())
-
     super.awakeFromNib()
   }
-}
-
-class UtilsApi: FlutterUtilsApi {
-    func getBundlePath(resourceName: String) -> String? {
-        return Bundle.main.url(forResource: resourceName, withExtension: nil)?.path
-    }
 }
