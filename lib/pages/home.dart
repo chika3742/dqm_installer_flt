@@ -101,36 +101,7 @@ class _HomePageState extends State<HomePage> {
                     padding: const EdgeInsets.all(8.0),
                     child: ElevatedButton(
                       onPressed: !creating152Profile
-                          ? () async {
-                              setState(() {
-                                creating152Profile = true;
-                              });
-
-                              try {
-                                await MinecraftProfile().create152Profile();
-
-                                if (mounted) {
-                                  showSnackBar(
-                                      context, "Minecraft 1.5.2のプロファイルを作成しました");
-                                }
-                              } on FileSystemException catch (e) {
-                                debugPrint(e.toString());
-                                if (mounted) {
-                                  showErrorSnackBar(context,
-                                      "プロファイルデータが見つかりません。ランチャーを起動してから再度お試しください。");
-                                }
-                              } on FormatException catch (e) {
-                                debugPrint(e.toString());
-                                if (mounted) {
-                                  showErrorSnackBar(
-                                      context, "プロファイルリストの読み取りに失敗しました");
-                                }
-                              } finally {
-                                setState(() {
-                                  creating152Profile = false;
-                                });
-                              }
-                            }
+                          ? create152Profile
                           : null,
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 100),
@@ -286,6 +257,7 @@ class _HomePageState extends State<HomePage> {
     ];
 
     if (await checkAllModFilesExist(files, _skinController.text)) {
+      if (!mounted) return;
       showDialog(
           context: context,
           builder: (context) {
@@ -306,6 +278,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (!await check152JarExists()) {
+      if (!mounted) return;
       showDialog(
           context: context,
           builder: (context) {
@@ -328,6 +301,7 @@ class _HomePageState extends State<HomePage> {
     await checker.check();
 
     if (checker.hasError) {
+      if (!mounted) return;
       final result = await showDialog(
           context: context,
           builder: (context) {
@@ -365,6 +339,37 @@ class _HomePageState extends State<HomePage> {
             skinPath: _skinController.text,
             additionalMods: _additionalMods,
           ));
+    }
+  }
+
+  Future<void> create152Profile() async {
+    setState(() {
+      creating152Profile = true;
+    });
+
+    try {
+      await MinecraftProfile().create152Profile();
+
+      if (mounted) {
+        showSnackBar(
+            context, "Minecraft 1.5.2のプロファイルを作成しました");
+      }
+    } on FileSystemException catch (e) {
+      debugPrint(e.toString());
+      if (mounted) {
+        showErrorSnackBar(context,
+            "プロファイルデータが見つかりません。ランチャーを起動してから再度お試しください。");
+      }
+    } on FormatException catch (e) {
+      debugPrint(e.toString());
+      if (mounted) {
+        showErrorSnackBar(
+            context, "プロファイルリストの読み取りに失敗しました");
+      }
+    } finally {
+      setState(() {
+        creating152Profile = false;
+      });
     }
   }
 }

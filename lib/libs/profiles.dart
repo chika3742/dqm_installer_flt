@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dqm_installer_flt/utils/utils.dart';
 import 'package:path/path.dart' as path;
+import 'package:http/http.dart' as http;
 
 class MinecraftProfile {
   final profileFile =
@@ -20,6 +21,20 @@ class MinecraftProfile {
   }
 
   Future<void> create152Profile() async {
+    final meta = json.decode(
+        (await http.get(Uri.parse(
+            "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
+        ))).body
+    );
+    final metaUrl = (meta["versions"] as List<dynamic>).firstWhere((e) => e["id"] == "1.5.2")["url"];
+
+    await File(path.join(
+      getMinecraftDirectoryPath(),
+      "versions", "1.5.2", "1.5.2.json",
+    )).create(recursive: true).then((file) async {
+      return file.writeAsString((await http.get(Uri.parse(metaUrl))).body);
+    });
+
     var parsedData = await parse();
     parsedData["profiles"]["1.5.2"] = MinecraftProfileEntry(
       created: DateTime.now().toIso8601String(),
