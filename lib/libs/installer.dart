@@ -454,6 +454,15 @@ class _CreateDqmProfile extends Procedure {
     ).toMap();
     await MinecraftProfile().save(profileData);
 
+    // Fix options.txt
+    var optionsFile = File(path.join(
+      getMinecraftDirectoryPath(),
+      "options.txt",
+    ));
+    await optionsFile.readAsString().then((data) {
+      return optionsFile.writeAsString(data.replaceFirst(RegExp("lang:.*"), "lang:ja_JP"));
+    });
+
     progress = 1;
     installer.updateProgress();
   }
