@@ -459,9 +459,11 @@ class _CreateDqmProfile extends Procedure {
       getMinecraftDirectoryPath(),
       "options.txt",
     ));
-    await optionsFile.readAsString().then((data) {
-      return optionsFile.writeAsString(data.replaceFirst(RegExp("lang:.*"), "lang:ja_JP"));
-    });
+    if (await optionsFile.exists()) {
+      await optionsFile.readAsString().then((data) {
+        return optionsFile.writeAsString(data.replaceFirst(RegExp("lang:.*"), "lang:ja_JP"));
+      });
+    }
 
     progress = 1;
     installer.updateProgress();
