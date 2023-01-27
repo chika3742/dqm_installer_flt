@@ -6,6 +6,7 @@ import 'package:archive/archive_io.dart';
 import 'package:dqm_installer_flt/libs/profiles.dart';
 import 'package:dqm_installer_flt/pages/home.dart';
 import 'package:dqm_installer_flt/utils/utils.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 
@@ -113,10 +114,6 @@ class _DownloadRequiredFiles extends Procedure {
 
   final List<DownloadableAsset> assetsToDownload = [
     DownloadableAsset(
-        Uri.parse("https://r2.chikach.net/dqm-assets/dqm4.json"), 0),
-    DownloadableAsset(
-        Uri.parse("https://r2.chikach.net/dqm-assets/legacy.json"), 0),
-    DownloadableAsset(
         Uri.parse("https://r2.chikach.net/dqm-assets/steve.png"), 1284),
     DownloadableAsset(
         Uri.parse(
@@ -162,9 +159,7 @@ class _DownloadRequiredFiles extends Procedure {
         fileSink.add(value);
 
         // update progress
-        if (asset.contentLength != 0) {
-          bytesDownloaded += value.length;
-        }
+        bytesDownloaded += value.length;
         progress = bytesDownloaded / totalBytes;
         installer.updateProgress();
       }).onDone(() {
@@ -193,10 +188,9 @@ class _CopyRequiredFiles extends Procedure {
               installer.versionName, "${installer.versionName}.jar"),
       installer.bodyModPath: path.join(getMinecraftDirectoryPath(), "mods",
           path.basename(installer.bodyModPath)),
-      path.join(await getTempPath(), "legacy.json"): path.join(
-          getMinecraftDirectoryPath(), "assets", "indexes", "legacy.json"),
     };
 
+    // add mod files
     for (var e in installer.additionalMods) {
       var modFileName = path.basename(Uri.decodeComponent(e.mod.url.path));
       filesToCopy[path.join(await getTempPath(), modFileName)] = path.join(
@@ -217,6 +211,7 @@ class _CopyRequiredFiles extends Procedure {
       }
     }
 
+    // copy files
     for (var i = 0; i < filesToCopy.length; i++) {
       var entry = filesToCopy.entries.toList()[i];
       await Directory(path.dirname(entry.value)).create(recursive: true);
@@ -225,9 +220,8 @@ class _CopyRequiredFiles extends Procedure {
       installer.updateProgress();
     }
 
-    // save version json
-    var dqmJsonFile = File(path.join(await getTempPath(), "dqm4.json"));
-    var decoded = json.decode(await dqmJsonFile.readAsString());
+    // write [versionName].json
+    var decoded = json.decode(await rootBundle.loadString("assets/dqm4.json"));
     decoded["id"] = installer.versionName;
     await File(path.join(
       getMinecraftDirectoryPath(),
@@ -235,6 +229,16 @@ class _CopyRequiredFiles extends Procedure {
       installer.versionName,
       "${installer.versionName}.json",
     )).writeAsString(const JsonEncoder.withIndent("  ").convert(decoded));
+
+    // write legacy.json
+    await File(path.join(
+      getMinecraftDirectoryPath(),
+      "assets",
+      "indexes",
+      "legacy.json",
+    )).writeAsString(
+      await rootBundle.loadString("assets/legacy.json"),
+    );
   }
 }
 
