@@ -8,9 +8,11 @@ DQM Installer (Flutterリメイク)
 
 ### 動作確認OS
 
-Windows版: Windows 11 22H2 build 22623.1180
-macOS版: macOS Ventura 13.1 (MBP 2020 M1*)
-Linux版: Ubuntu 22.10
+| プラットフォーム | バージョン |
+| --- | --- |
+| Windows | Windows 11 22H2 build 22623.1180 |
+| macOS | macOS Ventura 13.1 (MBP 2020 M1*) |
+| Linux | Ubuntu 22.10 |
 
 \* M1では赤と青の色が逆になって表示されます。修正方法は不明です。
 
