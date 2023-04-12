@@ -280,6 +280,13 @@ class _ExtractFiles extends Procedure {
         ));
         file.writeContent(outputStream);
         await outputStream.close();
+      } else {
+        await Directory(path.join(
+          await getTempPath(),
+          "extracted",
+          "jar",
+          file.name,
+        )).create(recursive: true);
       }
       fileCount++;
       progress = fileCount / files.length;
