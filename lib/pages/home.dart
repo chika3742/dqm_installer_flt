@@ -5,6 +5,7 @@ import 'package:dqm_installer_flt/libs/installer.dart';
 import 'package:dqm_installer_flt/libs/profiles.dart';
 import 'package:dqm_installer_flt/pages/installation_progress.dart';
 import 'package:dqm_installer_flt/utils/precondition.dart';
+import 'package:dqm_installer_flt/utils/ui.dart';
 import 'package:dqm_installer_flt/utils/utils.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -100,9 +101,7 @@ class _HomePageState extends State<HomePage> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: ElevatedButton(
-                      onPressed: !creating152Profile
-                          ? create152Profile
-                          : null,
+                      onPressed: !creating152Profile ? create152Profile : null,
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 100),
                         child: creating152Profile
@@ -298,47 +297,49 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
+    final installer = Installer(
+      prerequisiteModPath: _prerequisiteModController.text,
+      bodyModPath: _bodyModController.text,
+      bgmPath: _bgmController.text,
+      forgePath: _forgeController.text,
+      skinPath: _skinController.text,
+      additionalMods: _additionalMods,
+    );
+
+    if (await isDqmAlreadyInstalled(installer.versionName)) {
+      if (!mounted) return;
+      final result = await showAlertDialog(
+        context: context,
+        title: "上書き確認",
+        message: "既にこのバージョンのDQMがインストールされています。上書きしますか？",
+      );
+      if (result != true) {
+        return;
+      }
+    }
+
     await checker.check();
 
     if (checker.hasError) {
       if (!mounted) return;
-      final result = await showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text("確認"),
-              content: const Text("Step 1の環境チェックにエラーがあります。続行しますか?"),
-              actions: [
-                TextButton(
-                  child: const Text("キャンセル"),
-                  onPressed: () {
-                    Navigator.pop(context, false);
-                  },
-                ),
-                TextButton(
-                  child: const Text("OK"),
-                  onPressed: () {
-                    Navigator.pop(context, true);
-                  },
-                ),
-              ],
-            );
-          });
+      final result = await showAlertDialog(
+        context: context,
+        title: "環境チェックを無視しますか？",
+        message: "Step 1の環境チェックにエラーがあります。続行しますか？",
+      );
       if (result != true) {
         return;
       }
     }
 
     if (mounted) {
-      Navigator.pushNamed(context, "/install",
-          arguments: InstallationProgressPageArguments(
-            prerequisiteModPath: _prerequisiteModController.text,
-            bodyModPath: _bodyModController.text,
-            bgmPath: _bgmController.text,
-            forgePath: _forgeController.text,
-            skinPath: _skinController.text,
-            additionalMods: _additionalMods,
-          ));
+      Navigator.pushNamed(
+        context,
+        "/install",
+        arguments: InstallationProgressPageArguments(
+          installer: installer,
+        ),
+      );
     }
   }
 
@@ -351,20 +352,17 @@ class _HomePageState extends State<HomePage> {
       await MinecraftProfile().create152Profile();
 
       if (mounted) {
-        showSnackBar(
-            context, "Minecraft 1.5.2のプロファイルを作成しました");
+        showSnackBar(context, "Minecraft 1.5.2のプロファイルを作成しました");
       }
     } on FileSystemException catch (e) {
       debugPrint(e.toString());
       if (mounted) {
-        showErrorSnackBar(context,
-            "プロファイルデータが見つかりません。ランチャーを起動してから再度お試しください。");
+        showErrorSnackBar(context, "プロファイルデータが見つかりません。ランチャーを起動してから再度お試しください。");
       }
     } on FormatException catch (e) {
       debugPrint(e.toString());
       if (mounted) {
-        showErrorSnackBar(
-            context, "プロファイルリストの読み取りに失敗しました");
+        showErrorSnackBar(context, "プロファイルリストの読み取りに失敗しました");
       }
     } finally {
       setState(() {

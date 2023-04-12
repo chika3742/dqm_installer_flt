@@ -10,6 +10,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 
+import '../utils/precondition.dart';
+
 class Installer {
   List<Procedure> procedure = [];
   ProgressInfo progress = ProgressInfo();
@@ -45,6 +47,9 @@ class Installer {
       _CreateDqmProfile(this),
       _Cleanup(this),
     ];
+
+    _parseDqmType();
+    _parseDqmVersion();
   }
 
   void updateProgress() {
@@ -58,8 +63,7 @@ class Installer {
   }
 
   Future<void> install() async {
-    _parseDqmType();
-    _parseDqmVersion();
+    await deleteInstalledDqmVersion(versionName);
 
     for (var item in procedure) {
       await item.execute();
