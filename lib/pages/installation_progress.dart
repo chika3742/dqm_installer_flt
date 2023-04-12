@@ -1,5 +1,4 @@
 import 'package:dqm_installer_flt/libs/installer.dart';
-import 'package:dqm_installer_flt/pages/home.dart';
 import 'package:flutter/material.dart';
 
 class InstallationProgressPage extends StatefulWidget {
@@ -15,20 +14,9 @@ class InstallationProgressPage extends StatefulWidget {
 }
 
 class InstallationProgressPageArguments {
-  final String prerequisiteModPath;
-  final String bodyModPath;
-  final String bgmPath;
-  final String forgePath;
-  final String skinPath;
-  final List<AdditionalMod> additionalMods;
+  final Installer installer;
 
-  const InstallationProgressPageArguments(
-      {required this.prerequisiteModPath,
-      required this.bodyModPath,
-      required this.bgmPath,
-      required this.forgePath,
-      required this.skinPath,
-      required this.additionalMods});
+  const InstallationProgressPageArguments({required this.installer});
 }
 
 class _InstallationProgressPageState extends State<InstallationProgressPage> {
@@ -38,17 +26,10 @@ class _InstallationProgressPageState extends State<InstallationProgressPage> {
   void initState() {
     super.initState();
 
-    installer = Installer(
-      onProgressChanged: (progress) {
-        setState(() {});
-      },
-      prerequisiteModPath: widget.arguments.prerequisiteModPath,
-      bodyModPath: widget.arguments.bodyModPath,
-      bgmPath: widget.arguments.bgmPath,
-      forgePath: widget.arguments.forgePath,
-      skinPath: widget.arguments.skinPath,
-      additionalMods: widget.arguments.additionalMods,
-    );
+    installer = widget.arguments.installer;
+    installer.onProgressChanged = (_) {
+      setState(() {});
+    };
     installer.install().then((value) {
       showDialog(
         context: context,
