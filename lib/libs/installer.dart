@@ -255,7 +255,6 @@ class _ExtractFiles extends Procedure {
   @override
   Future<void> execute() async {
     super.execute();
-    final decoder = ZipDecoder();
     final mcJarPath = path.join(
       getMinecraftDirectoryPath(),
       "versions",
@@ -267,30 +266,25 @@ class _ExtractFiles extends Procedure {
     final preModStream = InputFileStream(installer.prerequisiteModPath);
     final forgeStream = InputFileStream(installer.forgePath);
     final files = [
-      ...decoder.decodeBuffer(mcJarStream).files,
-      ...decoder.decodeBuffer(forgeStream).files,
-      ...decoder.decodeBuffer(preModStream).files,
+      ...ZipDecoder().decodeBuffer(mcJarStream).files,
+      ...ZipDecoder().decodeBuffer(forgeStream).files,
+      ...ZipDecoder().decodeBuffer(preModStream).files,
     ];
 
     var fileCount = 0;
 
     for (var file in files) {
       if (file.isFile) {
-        final outputStream = OutputFileStream(path.join(
-          await getTempPath(),
-          "extracted",
-          "jar",
-          file.name,
-        ));
-        file.writeContent(outputStream);
-        await outputStream.close();
-      } else {
-        await Directory(path.join(
+        final f = await File(path.join(
           await getTempPath(),
           "extracted",
           "jar",
           file.name,
         )).create(recursive: true);
+
+        final outputStream = OutputFileStream(f.path);
+        file.writeContent(outputStream);
+        await outputStream.close();
       }
       fileCount++;
       progress = fileCount / files.length;
