@@ -19,15 +19,13 @@ jobs:
       - run: flutter pub get
       - run: flutter build windows
 
-      - name: Get version
-        uses: mikefarah/yq@v4
-        id: get_version
-        with:
-          cmd: yq -r ".version" pubspec.yaml
+      - name: Install yq
+        run: winget install yq -e
 
-      - id: compress
+      - name: Compress archive
+        id: compress
         run: |
-          $VERSION=$(echo "${{ steps.get_version.outputs.result }}" | % { $_ -replace '\+.+', '' })
+          $VERSION=$(yq -r ".version" pubspec.yaml | % { $_ -replace '\+.+', '' })
           $FILENAME="dqm_installer_flt_${VERSION}_windows.zip"
           echo "filename=$FILENAME" >> $GITHUB_OUTPUT
           
