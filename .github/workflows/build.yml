@@ -20,7 +20,7 @@ jobs:
       - run: Compress-Archive -DestinationPath windows_build.zip -Path build\windows\runner\release\*
       - uses: actions/upload-artifact@v3
         with:
-          name: windows
+          name: dqm_installer_flt__windows
           path: windows_build.zip
 
   build_macos:
@@ -51,7 +51,7 @@ jobs:
       - run: zip -r macos_build.zip build/macos/Build/Products/Release/dqm_installer_flt.app
       - uses: actions/upload-artifact@v3
         with:
-          name: macos
+          name: dqm_installer_flt__macos
           path: macos_build.zip
 
   build_linux:
@@ -76,5 +76,5 @@ jobs:
       - run: zip -r linux_build.zip build/linux/x64/release/bundle/*
       - uses: actions/upload-artifact@v3
         with:
-          name: linux
+          name: dqm_installer_flt__linux
           path: linux_build.zip
