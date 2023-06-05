@@ -1,7 +1,7 @@
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "v*"
   workflow_dispatch:
 
 jobs:
@@ -19,14 +19,28 @@ jobs:
       - run: flutter pub get
       - run: flutter build windows
 
-      - run: |
+      - name: Get version
+        uses: mikefarah/yq@v4
+        id: get_version
+        with:
+          cmd: yq -r ".version" pubspec.yaml
+
+      - id: compress
+        run: |
+          $VERSION=$(echo "${{ steps.get_version.outputs.result }}" | % { $_ -replace '\+.+', '' })
+          $FILENAME="dqm_installer_flt_${VERSION}_windows.zip"
+          echo "filename=$FILENAME" >> $GITHUB_OUTPUT
+          
           cd build\windows\runner
           Move-Item -Path release -Destination dqm_installer_flt
-          Compress-Archive -DestinationPath windows_build.zip -Path dqm_installer_flt
-      - uses: actions/upload-artifact@v3
+          Compress-Archive -DestinationPath ..\..\..\$FILENAME -Path dqm_installer_flt
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: dqm_installer_flt__windows
-          path: build\windows\runner\windows_build.zip
+          draft: true
+          files: |
+            ${{ steps.compress.outputs.filename }}
 
   build_macos:
     runs-on: macos-latest
