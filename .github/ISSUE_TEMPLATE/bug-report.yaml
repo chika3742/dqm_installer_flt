@@ -1,0 +1,81 @@
+name: 不具合の報告
+description: 本アプリの不具合の報告を作成します
+assignees:
+  - chika3742
+labels:
+  - bug
+title: "[BUG] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 作成する前の注意事項
+        [Issues](https://github.com/chika3742/dqm_installer_flt/issues) で検索し、同様の不具合の報告がないか確認してから作成してください。
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 再現手順
+      description: |
+        不具合を再現する手順を記載してください。
+        例:
+          1. '...' の画面を開く
+          2. '...' をクリックする
+          3. '...' へスクロールする
+          4. エラーが発生する
+      placeholder: 再現手順
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待される動作
+      description: これは本来どう動作するべきか、明確で簡潔に記入してください。
+      placeholder: 期待される動作
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の動作
+      description: 実際にはどのように動作するか、明確で簡潔に記入してください。可能であれば、スクリーンショットも添付してください。
+      placeholder: 例) 「〜」というエラーが表示される
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OSのバージョン
+      description: OSの名称とバージョンを記載してください
+      placeholder: 例) Windows 11 Home 22H2 / macOS 13.3 / Ubuntu 20.04
+    validations:
+      required: true
+
+  - type: input
+    id: dqm
+    attributes:
+      label: DQMのバージョン
+      placeholder: 例) 9.90
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: 本アプリのバージョン
+      placeholder: 例) v1.0.2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: launcher
+    attributes:
+      label: ランチャーの種類
+      options:
+        - MSIインストーラー (Windows 7/8) 版
+        - Microsoft Store (Windows 10/11) 版
+    validations:
+      required: true
