@@ -1,0 +1,58 @@
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build_windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - run: flutter pub get
+      - run: flutter build windows
+
+      - run: zip -r windows.zip build/windows/runner/release/*
+      - uses: actions/upload-artifact@v2
+        with:
+          name: windows
+          path: windows_build.zip
+
+  build_macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - run: flutter pub get
+      - run: flutter build macos
+
+      - run: zip -r macos.zip build/macos/Build/Products/Release/dqm_installer_flt.app
+      - uses: actions/upload-artifact@v2
+        with:
+          name: macos
+          path: macos_build.zip
+
+  build_linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - run: flutter pub get
+      - run: flutter build linux
+
+      - run: zip -r linux.zip build/linux/x64/release/bundle/*
+      - uses: actions/upload-artifact@v2
+        with:
+          name: linux
+          path: linux_build.zip
