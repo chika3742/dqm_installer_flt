@@ -15,7 +15,7 @@ jobs:
       - run: flutter pub get
       - run: flutter build windows
 
-      - run: zip -r windows.zip build/windows/runner/release/*
+      - run: Compress-Archive -DestinationPath windows_build.zip -Path build\windows\runner\release\*
       - uses: actions/upload-artifact@v2
         with:
           name: windows
@@ -44,7 +44,7 @@ jobs:
       - run: flutter pub get
       - run: flutter build macos
 
-      - run: zip -r macos.zip build/macos/Build/Products/Release/dqm_installer_flt.app
+      - run: zip -r macos_build.zip build/macos/Build/Products/Release/dqm_installer_flt.app
       - uses: actions/upload-artifact@v2
         with:
           name: macos
@@ -67,7 +67,7 @@ jobs:
       - run: flutter pub get
       - run: flutter build linux
 
-      - run: zip -r linux.zip build/linux/x64/release/bundle/*
+      - run: zip -r linux_build.zip build/linux/x64/release/bundle/*
       - uses: actions/upload-artifact@v2
         with:
           name: linux
