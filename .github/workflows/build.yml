@@ -100,14 +100,14 @@ jobs:
         run: |
           sudo apt-get -y update
           sudo apt-get install -y ninja-build libgtk-3-dev
-          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
-          chmod +x /usr/bin/yq
+          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O yq
+          chmod +x ./yq
 
       - run: flutter pub get
       - run: flutter build linux
 
       - run: |
-          VERSION=$(yq -r ".version" pubspec.yaml | sed -E 's/\+.*//')
+          VERSION=$(./yq -r ".version" pubspec.yaml | sed -E 's/\+.*//')
           
           cd build/linux/x64/release
           mv bundle dqm_installer_flt
