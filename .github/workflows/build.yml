@@ -45,14 +45,24 @@ jobs:
           p12-file-base64: ${{ secrets.CERT_P12_BASE64 }}
           p12-password: ${{ secrets.CERT_P12_PASS }}
 
-      - run: flutter pub get
-      - run: flutter build macos
+      - name: Import App Store Connect keychain
+        run: |
+          echo -n "${{ secrets.APP_STORE_CONNECT_KEY }}" > AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
+          xcrun notarytool store-credentials "App Store Connect Profile" \
+            --key AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8 \
+            --key-id ${{ secrets.APP_STORE_CONNECT_KEY_ID }} \
+            --issuer ${{ secrets.APP_STORE_CONNECT_KEY_ISSUER }}
 
-      - run: zip -r macos_build.zip build/macos/Build/Products/Release/dqm_installer_flt.app
+      - run: flutter pub get
+      - name: Archive macOS build
+        run: |
+          flutter build macos --config-only
+          xcodebuild -workspace ./macos/Runner.xcworkspace -scheme Runner archive
+
       - uses: actions/upload-artifact@v3
         with:
           name: dqm_installer_flt__macos
-          path: macos_build.zip
+          path: build/macos/notarized/dqm_installer_flt.dmg
 
   build_linux:
     runs-on: ubuntu-latest
@@ -73,7 +83,7 @@ jobs:
       - run: flutter pub get
       - run: flutter build linux
 
-      - run: zip -r linux_build.zip build/linux/x64/release/bundle/*
+      - run: zip -rj linux_build.zip build/linux/x64/release/bundle/*
       - uses: actions/upload-artifact@v3
         with:
           name: dqm_installer_flt__linux
