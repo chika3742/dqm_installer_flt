@@ -23,10 +23,13 @@ Future<bool> isDqmAlreadyInstalled(String versionName) {
   )).exists();
 }
 
-Future<void> deleteInstalledDqmVersion(String versionName) {
-  return Directory(path.join(
+Future<void> deleteInstalledDqmVersion(String versionName) async {
+  var directory = Directory(path.join(
     getMinecraftDirectoryPath(),
     "versions",
     versionName,
-  )).delete(recursive: true);
+  ));
+  if (await directory.exists()) {
+    await directory.delete(recursive: true);
+  }
 }
