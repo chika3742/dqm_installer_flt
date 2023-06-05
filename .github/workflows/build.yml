@@ -17,11 +17,14 @@ jobs:
       - run: flutter pub get
       - run: flutter build windows
 
-      - run: Compress-Archive -DestinationPath windows_build.zip -Path build\windows\runner\release\*
+      - run: |
+          cd build\windows\runner
+          Move-Item -Path release -Destination dqm_installer_flt
+          Compress-Archive -DestinationPath windows_build.zip -Path dqm_installer_flt
       - uses: actions/upload-artifact@v3
         with:
           name: dqm_installer_flt__windows
-          path: windows_build.zip
+          path: build\windows\runner\windows_build.zip
 
   build_macos:
     runs-on: macos-latest
@@ -83,8 +86,11 @@ jobs:
       - run: flutter pub get
       - run: flutter build linux
 
-      - run: zip -rj linux_build.zip build/linux/x64/release/bundle/*
+      - run: |
+          cd build/linux/x64/release
+          mv bundle dqm_installer_flt
+          zip -r linux_build.zip ./dqm_installer_flt
       - uses: actions/upload-artifact@v3
         with:
           name: dqm_installer_flt__linux
-          path: linux_build.zip
+          path: build/linux/x64/release/linux_build.zip
