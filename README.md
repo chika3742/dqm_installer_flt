@@ -14,9 +14,8 @@ DQM Installer (Flutterリメイク)
 | macOS | macOS Ventura 13.1 (MBP 2020 M1*) |
 | Linux | Ubuntu 22.10 |
 
-\* M1では赤と青の色が逆になって表示されます。修正方法は不明です。
-
-※macOS版はIntel/Apple Silicon(M1/M2シリーズ)両対応です。
+- Apple Mシリーズを搭載したMacでは色の表示に不具合が発生します。詳しくは以下をご覧ください。
+- macOS版はIntel/Apple Silicon(Apple Mシリーズ)両対応です。
 
 ## 利用上の注意
 
@@ -24,6 +23,23 @@ Windows 版 Minectaft ランチャーには、7/8版と10/11版(Microsoft Store�
 
 同じPCに両方がインストールされていると意図しない挙動が発生する可能性があるため、本ソフトを使用する前に必ず7/8版のランチャーをアンインストールしてください。
 
+## Apple Silicon Macでの表示の修正
+
+M1シリーズを搭載したMacでMinecraft 1.5.2を起動すると、光の三原色であるRGBのうち青と赤が逆転して表示されてしまいます。また、フルスクリーンにするとMinecraftがクラッシュするという問題も抱えています。以下の方法で修正可能です。
+
+1. 通常通り公式のランチャーを用いてインストールします。
+2. [Prism Launcher](https://prismlauncher.org/download/mac/)をインストールし、起動します。
+3. 「起動構成を追加」をクリックし、「名前」を「__DQM__」、「バージョン」で「1.5.2」を選択し、保存します。
+4. 作成した構成を右クリックし、「編集」をクリックします。
+5. 「バージョン」タブ→「Miencraft jarを置き換え」をクリックし、`~/Library/Application Support/minecraft/versions/DQMV vX.XX/DQM vX.XX.jar`を選択します。
+6. 「設定」タブ→「Javaの指定」にチェック→「自動検出」より、「バージョン」が`1.8.x_xxx`のものを選択します。無い場合は、[こちらのページ](https://www.azul.com/downloads/?version=java-8-lts&os=macos&package=jdk#zulu)よりZulu OpenJDKをダウンロードしてインストールしてください。
+7. Spotlight検索等でターミナルを起動し、以下のコマンドを実行します。
+
+    ```sh
+    rm -rf ~/Library/Application\ Support/PrismLauncher/instances/DQM/.minecraft
+    ln -s ~/Library/Application\ Support/minecraft ~/Library/Application\ Support/PrismLauncher/instances/DQM/.minecraft
+    ```
+
 ## 利用方法
 
-今後動画を投稿予定です。
+今後記事を投稿予定です。
