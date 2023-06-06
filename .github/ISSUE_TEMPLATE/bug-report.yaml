@@ -13,6 +13,15 @@ body:
         [Issues](https://github.com/chika3742/dqm_installer_flt/issues) で検索し、同様の不具合の報告がないか確認してから作成してください。
 
   - type: textarea
+    id: summary
+    attributes:
+      label: 概要
+      description: この不具合の概要について、明確で簡潔に記入してください。
+      placeholder: 概要
+    validations:
+      required: true
+
+  - type: textarea
     id: reproduction
     attributes:
       label: 再現手順
