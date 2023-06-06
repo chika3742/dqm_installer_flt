@@ -39,6 +39,10 @@ M1シリーズを搭載したMacでMinecraft 1.5.2を起動すると、光の三
     rm -rf ~/Library/Application\ Support/PrismLauncher/instances/DQM/.minecraft
     ln -s ~/Library/Application\ Support/minecraft ~/Library/Application\ Support/PrismLauncher/instances/DQM/.minecraft
     ```
+8. 作成した構成をダブルクリックして起動します。
+9. ビデオ設定でフルスクリーンをオンにします。
+
+ウィンドウモード時は色がおかしいままですが、フルスクリーンにすることで直ります。
 
 ## 利用方法
 
