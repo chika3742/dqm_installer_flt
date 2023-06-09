@@ -31,8 +31,8 @@ M1シリーズを搭載したMacでMinecraft 1.5.2を起動すると、光の三
 2. [Prism Launcher](https://prismlauncher.org/download/mac/)をインストールし、起動します。
 3. 「起動構成を追加」をクリックし、「名前」を「__DQM__」、「バージョン」で「1.5.2」を選択し、保存します。
 4. 作成した構成を右クリックし、「編集」をクリックします。
-5. 「バージョン」タブ→「Miencraft jarを置き換え」をクリックし、`~/Library/Application Support/minecraft/versions/DQMV vX.XX/DQM vX.XX.jar`を選択します。
-6. 「設定」タブ→「Javaの指定」にチェック→「自動検出」より、「バージョン」が`1.8.x_xxx`のものを選択します。無い場合は、[こちらのページ](https://www.azul.com/downloads/?version=java-8-lts&os=macos&package=jdk#zulu)よりZulu OpenJDKをダウンロードしてインストールしてください。
+5. 「バージョン」タブ→「Miencraft jarを置き換え」をクリックし、`~/Library/Application Support/minecraft/versions/DQMV vX.XX/DQMV vX.XX.jar`を選択します。
+6. 「設定」タブ→「Javaの指定」にチェック→「自動検出」より、「バージョン」が`1.8.x_xxx`のものを選択します。無い場合は、[こちらのページ](https://www.azul.com/downloads/?version=java-8-lts&os=macos&package=jdk#zulu)よりZulu OpenJDKをダウンロードしてインストールしてから選択してください。
 7. Spotlight検索等でターミナルを起動し、以下のコマンドを実行します。
 
     ```sh
