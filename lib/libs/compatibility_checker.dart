@@ -25,11 +25,11 @@ class CompatibilityChecker {
     }
     if (incompatibleProfiles.isNotEmpty) {
       builder.writeln(
-          "以下のプロファイルにゲームディレクトリを設定してください。: ${incompatibleProfiles.join(", ")}");
+          "起動構成「${incompatibleProfiles.join("」「")}」にゲームディレクトリを設定してください。");
     }
     if (directoriesNotEmpty.isNotEmpty) {
       builder.writeln(
-          "以下のフォルダーを空にしてください。必要なファイルが入っている場合はバックアップを取ってください。: ${directoriesNotEmpty.join(", ")}");
+          ".minecraftフォルダー内のフォルダー「${directoriesNotEmpty.join("」「")}」を空にしてください。必要なファイルが入っている場合はバックアップを取ってください。");
     }
 
     return builder.toString().trim();
