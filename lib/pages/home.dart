@@ -288,6 +288,20 @@ class _HomePageState extends State<HomePage> {
       additionalMods: _additionalMods,
     );
 
+    try {
+      installer.parseDqmFileName();
+    } catch (e, st) {
+      debugPrint(e.toString());
+      debugPrintStack(stackTrace: st);
+
+      if (!mounted) return;
+      await showAlertDialog(
+        context: context,
+        title: "DQMの種類の判別に失敗しました。",
+        message: "ファイル名が正しくない可能性があります。ダウンロードしたファイルのファイル名は絶対に変更しないでください。",
+      );
+    }
+
     if (await isDqmAlreadyInstalled(installer.versionName)) {
       if (!mounted) return;
       final result = await showAlertDialog(
