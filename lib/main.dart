@@ -15,6 +15,10 @@ class MyApp extends StatelessWidget {
       title: 'DQM Installer',
       theme: ThemeData(
         primarySwatch: Colors.amber,
+        outlinedButtonTheme: OutlinedButtonThemeData(
+            style: OutlinedButton.styleFrom(
+          foregroundColor: Colors.green,
+        )),
         fontFamily: "MPLUS1p",
       ),
       locale: const Locale("ja"),

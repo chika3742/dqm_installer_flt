@@ -76,10 +76,6 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(width: 8),
                         OutlinedButton(
-                          style: ButtonStyle(
-                            foregroundColor:
-                                MaterialStatePropertyAll(Colors.amber.shade800),
-                          ),
                           onPressed: () {
                             launchUrl(
                                 Directory(getMinecraftDirectoryPath()).uri);
