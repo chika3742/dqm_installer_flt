@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dqm_installer_flt/libs/compatibility_checker.dart';
+import 'package:dqm_installer_flt/libs/error_checker.dart';
 import 'package:dqm_installer_flt/libs/installer.dart';
 import 'package:dqm_installer_flt/libs/profiles.dart';
 import 'package:dqm_installer_flt/pages/installation_progress.dart';
@@ -265,45 +266,16 @@ class _HomePageState extends State<HomePage> {
       _forgeController.text,
     ];
 
-    if (await checkAllModFilesExist(files, _skinController.text)) {
-      if (!mounted) return;
-      showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text("エラー"),
-              content: const Text("指定されたファイルの一部が存在しません。"),
-              actions: [
-                TextButton(
-                  child: const Text("OK"),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
-            );
-          });
-      return;
-    }
+    final errors = [
+      PossibleError("指定されたファイルの一部が存在しません。", () {
+        return checkAllModFilesExist(files, _skinController.text);
+      }),
+      const PossibleError("Step 2、Step 3を踏んでから再度お試しください。", check152JarExists),
+    ];
 
-    if (!await check152JarExists()) {
-      if (!mounted) return;
-      showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text("エラー"),
-              content: const Text("Step 2、Step 3を踏んでから再度お試しください。"),
-              actions: [
-                TextButton(
-                  child: const Text("OK"),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                )
-              ],
-            );
-          });
+    final checkResult = await checkErrors(errors);
+
+    if (!checkResult) {
       return;
     }
 
@@ -322,6 +294,7 @@ class _HomePageState extends State<HomePage> {
         context: context,
         title: "上書き確認",
         message: "既にこのバージョンのDQMがインストールされています。上書きしますか？",
+        showCancel: true,
       );
       if (result != true) {
         return;
@@ -336,6 +309,7 @@ class _HomePageState extends State<HomePage> {
         context: context,
         title: "環境チェックを無視しますか？",
         message: "Step 1の環境チェックにエラーがあります。続行しますか？",
+        showCancel: true,
       );
       if (result != true) {
         return;
@@ -351,6 +325,31 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
+  }
+
+  Future<bool> checkErrors(List<PossibleError> errors) async {
+    for (final error in errors) {
+      final result = await error.check().then((value) {
+        if (!value) {
+          showAlertDialog(
+              context: context, title: "エラー", message: error.errorMessage);
+          return false;
+        }
+        return true;
+      }).catchError((e, stackTrace) {
+        debugPrint(e.toString());
+        debugPrintStack(stackTrace: stackTrace);
+
+        return false;
+      });
+
+      if (!result) {
+        return false;
+      }
+    }
+
+    // no error
+    return true;
   }
 
   Future<void> create152Profile() async {
