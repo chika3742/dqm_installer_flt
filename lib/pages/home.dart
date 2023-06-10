@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dqm_installer_flt/libs/compatibility_checker.dart';
 import 'package:dqm_installer_flt/libs/installer.dart';
+import 'package:dqm_installer_flt/libs/possible_error.dart';
 import 'package:dqm_installer_flt/libs/profiles.dart';
 import 'package:dqm_installer_flt/pages/installation_progress.dart';
 import 'package:dqm_installer_flt/utils/precondition.dart';
@@ -13,6 +14,8 @@ import 'package:path/path.dart' as path;
 import 'package:timelines/timelines.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+
+import '../data.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -60,29 +63,37 @@ class _HomePageState extends State<HomePage> {
                       color: !checker.hasError ? null : Colors.red,
                     ),
                   ),
-                  if (checker.hasError) Text(checker.errorMessage),
+                  if (checker.hasError)
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          left: 16.0, top: 8.0, bottom: 8.0),
+                      child: Text(checker.errorMessage),
+                    ),
+                  if (checker.hasError)
+                    const Text("これらのエラーは無視することも可能ですが、動作は保証しません。"),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Row(
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.refresh),
-                          splashRadius: 24,
+                        OutlinedButton(
                           onPressed: () {
                             checkWhetherCanBeInstalled();
                           },
+                          child: const Row(
+                            children: [
+                              Icon(Icons.refresh),
+                              SizedBox(width: 8),
+                              Text("再チェックする"),
+                            ],
+                          ),
                         ),
                         const SizedBox(width: 8),
                         OutlinedButton(
-                          style: ButtonStyle(
-                            foregroundColor:
-                                MaterialStatePropertyAll(Colors.amber.shade800),
-                          ),
                           onPressed: () {
                             launchUrl(
                                 Directory(getMinecraftDirectoryPath()).uri);
                           },
-                          child: const Text("minecraftフォルダーを開く"),
+                          child: const Text(".minecraftフォルダーを開く"),
                         ),
                       ],
                     ),
@@ -255,45 +266,16 @@ class _HomePageState extends State<HomePage> {
       _forgeController.text,
     ];
 
-    if (await checkAllModFilesExist(files, _skinController.text)) {
-      if (!mounted) return;
-      showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text("エラー"),
-              content: const Text("指定されたファイルの一部が存在しません。"),
-              actions: [
-                TextButton(
-                  child: const Text("OK"),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
-            );
-          });
-      return;
-    }
+    final errors = [
+      PossibleError("指定されたファイルの一部が存在しません。", () {
+        return checkAllModFilesExist(files, _skinController.text);
+      }),
+      const PossibleError("Step 2、Step 3を踏んでから再度お試しください。", check152JarExists),
+    ];
 
-    if (!await check152JarExists()) {
-      if (!mounted) return;
-      showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text("エラー"),
-              content: const Text("Step 2、Step 3を踏んでから再度お試しください。"),
-              actions: [
-                TextButton(
-                  child: const Text("OK"),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                )
-              ],
-            );
-          });
+    final checkResult = await checkErrors(errors);
+
+    if (!checkResult) {
       return;
     }
 
@@ -306,12 +288,27 @@ class _HomePageState extends State<HomePage> {
       additionalMods: _additionalMods,
     );
 
+    try {
+      installer.parseDqmFileName();
+    } catch (e, st) {
+      debugPrint(e.toString());
+      debugPrintStack(stackTrace: st);
+
+      if (!mounted) return;
+      await showAlertDialog(
+        context: context,
+        title: "DQMの種類の判別に失敗しました。",
+        message: "ファイル名が正しくない可能性があります。ダウンロードしたファイルのファイル名は絶対に変更しないでください。",
+      );
+    }
+
     if (await isDqmAlreadyInstalled(installer.versionName)) {
       if (!mounted) return;
       final result = await showAlertDialog(
         context: context,
         title: "上書き確認",
         message: "既にこのバージョンのDQMがインストールされています。上書きしますか？",
+        showCancel: true,
       );
       if (result != true) {
         return;
@@ -326,6 +323,7 @@ class _HomePageState extends State<HomePage> {
         context: context,
         title: "環境チェックを無視しますか？",
         message: "Step 1の環境チェックにエラーがあります。続行しますか？",
+        showCancel: true,
       );
       if (result != true) {
         return;
@@ -341,6 +339,31 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
+  }
+
+  Future<bool> checkErrors(List<PossibleError> errors) async {
+    for (final error in errors) {
+      final result = await error.check().then((value) {
+        if (!value) {
+          showAlertDialog(
+              context: context, title: "エラー", message: error.errorMessage);
+          return false;
+        }
+        return true;
+      }).catchError((e, stackTrace) {
+        debugPrint(e.toString());
+        debugPrintStack(stackTrace: stackTrace);
+
+        return false;
+      });
+
+      if (!result) {
+        return false;
+      }
+    }
+
+    // no error
+    return true;
   }
 
   Future<void> create152Profile() async {
@@ -491,92 +514,10 @@ class _ModCheckboxList extends StatefulWidget {
 }
 
 class _ModCheckboxListState extends State<_ModCheckboxList> {
-  final List<AdditionalMod> catalog = [
-    AdditionalMod(
-      "Skin Fixer",
-      "ランチャーでアップロードしたスキンをゲーム内に反映させます。"
-          "これを導入しなかった場合には、上で指定したスキンが使用されます。"
-          "スリムスキンは腕に黒帯が発生します。",
-      mod: DownloadableAsset(
-        Uri.parse(
-            "https://mediafilez.forgecdn.net/files/2571/89/skin-fixer-1.5.2-1.0.1.jar"),
-        196880,
-      ),
-    ),
-    AdditionalMod(
-        "ChickenChunks",
-        "チャンク読み込みMOD。これを使うと、別ディメンションにいるときでも薬草などが育ちます。\n"
-            "チャンクローダーをクラフトする必要があります。クラフト方法はCraftGuideで調べてください。",
-        mod: DownloadableAsset(
-          Uri.parse(
-              "https://r2.chikach.net/dqm-assets/recommended-mods/ChickenChunks 1.3.2.14.jar"),
-          93761,
-        ),
-        coreMod: DownloadableAsset(
-          Uri.parse(
-              "https://r2.chikach.net/dqm-assets/recommended-mods/CodeChickenCore 0.8.7.3-fix1.jar"),
-          322443,
-        )),
-    AdditionalMod(
-        "CraftGuide",
-        "全アイテムのクラフト方法を確認できます。DQMの攻略を進めるためにはほぼ必須と言っても過言ではありません。"
-            "Gキーで開けます。",
-        mod: DownloadableAsset(
-          Uri.parse(
-              "https://r2.chikach.net/dqm-assets/recommended-mods/CraftGuide-1.6.7.3-modloader.zip"),
-          287669,
-        )),
-    AdditionalMod(
-      "Inventory Tweaks",
-      "インベントリを整理してくれます。Rキーで発動します。",
-      mod: DownloadableAsset(
-        Uri.parse(
-            "https://r2.chikach.net/dqm-assets/recommended-mods/InventoryTweaks-1.54.jar"),
-        181890,
-      ),
-    ),
-    AdditionalMod(
-      "Multi Page Chest",
-      "超大容量チェストを追加するMODです。ダイヤ4個とチェスト4個でクラフトできます。",
-      mod: DownloadableAsset(
-        Uri.parse(
-            "https://r2.chikach.net/dqm-assets/recommended-mods/multiPageChest_1.2.3_Universal.zip"),
-        25232,
-      ),
-    ),
-    AdditionalMod(
-      "日本語MOD",
-      "Minecraft 1.5.2は日本語入力に非対応のため、このMODを導入すると日本語でチャットを打ち込めるようになります。",
-      mod: DownloadableAsset(
-        Uri.parse(
-            "https://r2.chikach.net/dqm-assets/recommended-mods/NihongoMOD_v1.2.2_forMC1.5.2.zip"),
-        98764,
-      ),
-    ),
-    AdditionalMod(
-      "VoxelMap",
-      "地図MODです。最後に死んだ場所を記録したり、マップピンを刺したりできます。",
-      mod: DownloadableAsset(
-        Uri.parse(
-            "https://r2.chikach.net/dqm-assets/recommended-mods/VoxelMap-1.5.2.zip"),
-        435242,
-      ),
-    ),
-    AdditionalMod(
-      "Damage Indicators",
-      "Mobの残り体力を表示できます。",
-      mod: DownloadableAsset(
-        Uri.parse(
-            "https://r2.chikach.net/dqm-assets/recommended-mods/1.5.2 DamageIndicators v2.7.0.1.zip"),
-        292208,
-      ),
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: catalog.map((e) => _buildCheckbox(e)).toList(),
+      children: additionalMods.map((e) => _buildCheckbox(e)).toList(),
     );
   }
 
@@ -621,16 +562,4 @@ class _ModCheckboxListState extends State<_ModCheckboxList> {
   }
 }
 
-class AdditionalMod {
-  final String title;
-  final String description;
-  final DownloadableAsset mod;
-  final DownloadableAsset? coreMod;
 
-  const AdditionalMod(this.title, this.description,
-      {required this.mod, this.coreMod});
-
-  List<DownloadableAsset> toFiles() {
-    return [mod, if (coreMod != null) coreMod!];
-  }
-}
