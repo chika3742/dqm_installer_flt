@@ -4,12 +4,12 @@ import 'dart:io';
 
 import 'package:archive/archive_io.dart';
 import 'package:dqm_installer_flt/libs/profiles.dart';
-import 'package:dqm_installer_flt/pages/home.dart';
 import 'package:dqm_installer_flt/utils/utils.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 
+import '../data.dart';
 import '../utils/precondition.dart';
 
 class Installer {
