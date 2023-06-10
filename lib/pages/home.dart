@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:dqm_installer_flt/libs/compatibility_checker.dart';
-import 'package:dqm_installer_flt/libs/error_checker.dart';
 import 'package:dqm_installer_flt/libs/installer.dart';
+import 'package:dqm_installer_flt/libs/possible_error.dart';
 import 'package:dqm_installer_flt/libs/profiles.dart';
 import 'package:dqm_installer_flt/pages/installation_progress.dart';
 import 'package:dqm_installer_flt/utils/precondition.dart';

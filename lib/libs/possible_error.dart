@@ -13,7 +13,6 @@ class PossibleError {
 
   Future<bool> check() async {
     var result = await checkFunction();
-    print(result);
     return invert ? !result : result;
   }
 }
