@@ -11,7 +11,7 @@ Future<bool> checkAllModFilesExist(List<String> paths, String skinPath) async {
 
   return (await Future.wait(paths.map((e) => File(e).exists()).toList()))
           .every((e) => e) &&
-      (skinPath.isNotEmpty && await File(skinPath).exists());
+      (skinPath.isEmpty || await File(skinPath).exists());
 }
 
 Future<bool> check152JarExists() {
