@@ -62,17 +62,29 @@ class _HomePageState extends State<HomePage> {
                       color: !checker.hasError ? null : Colors.red,
                     ),
                   ),
-                  if (checker.hasError) Text(checker.errorMessage),
+                  if (checker.hasError)
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          left: 16.0, top: 8.0, bottom: 8.0),
+                      child: Text(checker.errorMessage),
+                    ),
+                  if (checker.hasError)
+                    const Text("これらのエラーは無視することも可能ですが、動作は保証しません。"),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Row(
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.refresh),
-                          splashRadius: 24,
+                        OutlinedButton(
                           onPressed: () {
                             checkWhetherCanBeInstalled();
                           },
+                          child: const Row(
+                            children: [
+                              Icon(Icons.refresh),
+                              SizedBox(width: 8),
+                              Text("再チェックする"),
+                            ],
+                          ),
                         ),
                         const SizedBox(width: 8),
                         OutlinedButton(
@@ -80,7 +92,7 @@ class _HomePageState extends State<HomePage> {
                             launchUrl(
                                 Directory(getMinecraftDirectoryPath()).uri);
                           },
-                          child: const Text("minecraftフォルダーを開く"),
+                          child: const Text(".minecraftフォルダーを開く"),
                         ),
                       ],
                     ),
