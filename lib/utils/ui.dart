@@ -4,6 +4,7 @@ Future<bool?> showAlertDialog({
   required BuildContext context,
   required String title,
   required String message,
+  bool showCancel = false,
 }) {
   return showDialog<bool>(
       context: context,
@@ -12,12 +13,13 @@ Future<bool?> showAlertDialog({
           title: Text(title),
           content: Text(message),
           actions: [
-            TextButton(
-              child: const Text("キャンセル"),
-              onPressed: () {
-                Navigator.pop(context, false);
-              },
-            ),
+            if (showCancel)
+              TextButton(
+                child: const Text("キャンセル"),
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+              ),
             TextButton(
               child: const Text("OK"),
               onPressed: () {
