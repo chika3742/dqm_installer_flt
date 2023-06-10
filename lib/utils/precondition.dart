@@ -10,7 +10,7 @@ Future<bool> checkAllModFilesExist(List<String> paths, String skinPath) async {
   if (paths.any((element) => element.isEmpty)) return false;
 
   return (await Future.wait(paths.map((e) => File(e).exists()).toList()))
-          .every((e) => e) ||
+          .every((e) => e) &&
       (skinPath.isNotEmpty && await File(skinPath).exists());
 }
 
