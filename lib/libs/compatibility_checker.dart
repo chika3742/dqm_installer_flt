@@ -8,6 +8,8 @@ class CompatibilityChecker {
   bool profileFileExists = false;
   List<String> incompatibleProfiles = [];
   List<String> directoriesNotEmpty = [];
+  bool failedToCheck = false;
+  String checkErrorMessage = "";
 
   bool get hasError => errorMessage.isNotEmpty;
 
@@ -31,16 +33,23 @@ class CompatibilityChecker {
       builder.writeln(
           ".minecraftフォルダー内のフォルダー「${directoriesNotEmpty.join("」「")}」を空にしてください。必要なファイルが入っている場合はバックアップを取ってください。");
     }
+    if (failedToCheck) {
+      builder.writeln("チェックに失敗しました。");
+      builder.writeln(checkErrorMessage);
+    }
 
     return builder.toString().trim();
   }
 
   Future<void> check() async {
-    await _checkProfileFileExists();
-    if (profileFileExists) {
+    try {
+      await _checkProfileFileExists();
       await _checkGameDir();
+      await _checkIfDirectoriesEmpty();
+    } catch (e) {
+      failedToCheck = true;
+      checkErrorMessage = e.toString();
     }
-    await _checkIfDirectoriesEmpty();
   }
 
   Future<void> _checkProfileFileExists() async {
@@ -48,6 +57,10 @@ class CompatibilityChecker {
   }
 
   Future<void> _checkGameDir() async {
+    if (!profileFileExists) {
+      return;
+    }
+
     incompatibleProfiles.clear();
 
     var profile = MinecraftProfile();
