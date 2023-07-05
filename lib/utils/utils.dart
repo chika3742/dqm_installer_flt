@@ -47,3 +47,9 @@ void showErrorSnackBar(BuildContext context, String message) {
   showSnackBar(context, message,
       color: Colors.red, duration: const Duration(seconds: 8));
 }
+
+void saveErrorToFile(Object e, StackTrace? st) {
+  // save error to file
+  File(path.join(path.dirname(Platform.resolvedExecutable), "error_${DateTime.now().toString().replaceAll(RegExp(":| "), "_")}.txt"))
+      .writeAsStringSync("${e.toString()}\n${st.toString()}");
+}
