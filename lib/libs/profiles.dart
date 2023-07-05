@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dqm_installer_flt/utils/utils.dart';
-import 'package:path/path.dart' as path;
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as path;
 
 class MinecraftProfile {
   final profileFile =
@@ -48,7 +48,7 @@ class MinecraftProfile {
 }
 
 class MinecraftProfileEntry {
-  final String created;
+  final String? created;
   final String? icon;
   final String lastVersionId;
   final String name;
