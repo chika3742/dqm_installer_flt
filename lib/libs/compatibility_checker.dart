@@ -46,9 +46,10 @@ class CompatibilityChecker {
       await _checkProfileFileExists();
       await _checkGameDir();
       await _checkIfDirectoriesEmpty();
-    } catch (e) {
+    } catch (e, st) {
       failedToCheck = true;
       checkErrorMessage = e.toString();
+      saveErrorToFile(e, st);
     }
   }
 
