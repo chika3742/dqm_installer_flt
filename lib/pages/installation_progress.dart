@@ -1,4 +1,5 @@
 import 'package:dqm_installer_flt/libs/installer.dart';
+import 'package:dqm_installer_flt/utils/utils.dart';
 import 'package:flutter/material.dart';
 
 class InstallationProgressPage extends StatefulWidget {
@@ -66,6 +67,7 @@ class _InstallationProgressPageState extends State<InstallationProgressPage> {
         }
       } else {
         errorMessage = "インストール中にエラーが発生しました。(${e.toString()})";
+        saveErrorToFile(e, st);
       }
 
       showDialog(
