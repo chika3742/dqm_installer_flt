@@ -29,8 +29,12 @@ Future<String> getLauncherAccountsPath() async {
 }
 
 Future<String> getTempPath() async {
-  return path.join(
+  var p = path.join(
       (await getTemporaryDirectory()).path, "net.chikach.dqmInstallerFlt");
+  if (Platform.isWindows) {
+    p = r"\\.\" + p;
+  }
+  return p;
 }
 
 void showSnackBar(BuildContext context, String message,
