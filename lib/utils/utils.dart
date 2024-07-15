@@ -20,7 +20,8 @@ String getMinecraftDirectoryPath() {
 
 Future<String> getLauncherAccountsPath() async {
   if (Platform.isWindows) {
-    final microsoftStorePath = path.join(getMinecraftDirectoryPath(), "launcher_accounts_microsoft_store.json");
+    final microsoftStorePath = path.join(
+        getMinecraftDirectoryPath(), "launcher_accounts_microsoft_store.json");
     if (await File(microsoftStorePath).exists()) {
       return microsoftStorePath;
     }
@@ -32,7 +33,7 @@ Future<String> getTempPath() async {
   var p = path.join(
       (await getTemporaryDirectory()).path, "net.chikach.dqmInstallerFlt");
   if (Platform.isWindows) {
-    p = r"\\.\" + p;
+    p = r"\\?\" + p;
   }
   return p;
 }
@@ -54,6 +55,7 @@ void showErrorSnackBar(BuildContext context, String message) {
 
 void saveErrorToFile(Object e, StackTrace? st) {
   // save error to file
-  File(path.join(path.dirname(Platform.resolvedExecutable), "error_${DateTime.now().toString().replaceAll(RegExp(":| "), "_")}.txt"))
+  File(path.join(path.dirname(Platform.resolvedExecutable),
+          "error_${DateTime.now().toString().replaceAll(RegExp(":| "), "_")}.txt"))
       .writeAsStringSync("${e.toString()}\n${st.toString()}");
 }

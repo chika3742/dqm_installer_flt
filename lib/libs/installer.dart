@@ -293,7 +293,7 @@ class _ExtractFiles extends Procedure {
           await getTempPath(),
           "extracted",
           "jar",
-          file.name,
+          file.name.replaceAll("/", path.separator),
         )).create(recursive: true);
 
         final outputStream = OutputFileStream(f.path);
