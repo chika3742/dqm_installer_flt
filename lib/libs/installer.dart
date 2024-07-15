@@ -304,7 +304,7 @@ class _ExtractFiles extends Procedure {
       progress = fileCount / files.length;
       installer.updateProgress();
     }
-    await preModStream.close();
+    await mcJarStream.close();
     await forgeStream.close();
     await preModStream.close();
 
@@ -480,7 +480,8 @@ class _CreateDqmProfile extends Procedure {
     ));
     if (await optionsFile.exists()) {
       await optionsFile.readAsString().then((data) {
-        return optionsFile.writeAsString(data.replaceFirst(RegExp("lang:.*"), "lang:ja_JP"));
+        return optionsFile
+            .writeAsString(data.replaceFirst(RegExp("lang:.*"), "lang:ja_JP"));
       });
     }
 
