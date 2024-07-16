@@ -57,20 +57,43 @@ class _HomePageState extends State<HomePage> {
               contents: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    !checker.hasError ? "インストール可能です。" : "インストール前に準備が必要です",
-                    style: TextStyle(
-                      color: !checker.hasError ? null : Colors.red,
+                  if (checker.hasError)
+                    const Row(
+                      children: [
+                        Icon(Icons.warning, color: Colors.orange, size: 20),
+                        SizedBox(width: 4),
+                        Text("インストール前に準備が必要です",
+                            style: TextStyle(color: Colors.red)),
+                      ],
+                    )
+                  else
+                    const Row(
+                      children: [
+                        Icon(Icons.check, color: Colors.green, size: 20),
+                        SizedBox(width: 4),
+                        Text("インストール可能です。"),
+                      ],
                     ),
-                  ),
                   if (checker.hasError)
                     Padding(
-                      padding: const EdgeInsets.only(
-                          left: 16.0, top: 8.0, bottom: 8.0),
-                      child: Text(checker.errorMessage),
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (final error in checker.errorMessage)
+                            Card(
+                              color: Colors.red.shade100,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8.0, horizontal: 16.0),
+                                child: error,
+                              ),
+                            )
+                        ],
+                      ),
                     ),
                   if (checker.hasError)
-                    const Text("これらのエラーは無視することも可能ですが、動作は保証しません。"),
+                    const Text("これらのエラーは無視することもできますが、動作は保証しません。"),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Row(
