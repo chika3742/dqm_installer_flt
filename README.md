@@ -32,17 +32,17 @@ M1シリーズを搭載したMacでMinecraft 1.5.2を起動すると、光の三
 3. 「起動構成を追加」をクリックし、「名前」を「__DQM__」、「バージョン」で「1.5.2」を選択し、保存します。
 4. 作成した構成を右クリックし、「編集」をクリックします。
 5. 「バージョン」タブ→「Miencraft jarを置き換え」をクリックし、<br>`（自身のユーザー名）`→`Library`→`Application Support`→`minecraft`→`versions`→`DQMV vX.XX`→`DQMV vX.XX.jar`と辿って選択してください。`（自身のユーザー名）`および`Library`フォルダーが見当たらない場合は、[こちらを参照してください](#minecraftディレクトリにたどり着けない場合)。
-7. 「設定」タブ→「Javaの指定」にチェック→「自動検出」より、「バージョン」が`1.8.x_xxx`となっているものを選択します。<br>無い場合は、[こちらのページ](https://www.azul.com/downloads/?version=java-8-lts&os=macos&architecture=arm-64-bit&package=jdk#zulu)よりZulu OpenJDKをダウンロード・インストールしてから選択してください。少し下にスクロールしてしばらく待つと１つだけ項目が表示されるはずなので、右側のDownloadよりdmgファイルをダウンロードし、指示に従ってインストールしてください。
-10. Spotlight検索等でターミナルを起動し、以下のコマンドを実行します。
+6. 「設定」タブ→「Javaの指定」にチェック→「自動検出」より、「バージョン」が`1.8.x_xxx`となっているものを選択します。<br>無い場合は、[こちらのページ](https://www.azul.com/downloads/?version=java-8-lts&os=macos&architecture=arm-64-bit&package=jdk#zulu)よりZulu OpenJDKをダウンロード・インストールしてから選択してください。少し下にスクロールしてしばらく待つと１つだけ項目が表示されるはずなので、右側のDownloadよりdmgファイルをダウンロードし、指示に従ってインストールしてください。
+7. Spotlight検索等でターミナルを起動し、以下のコマンドを実行します。
 
     ```bash
     rm -r ~/Library/Application\ Support/PrismLauncher/instances/DQM/.minecraft; ln -s ~/Library/Application\ Support/minecraft ~/Library/Application\ Support/PrismLauncher/instances/DQM/.minecraft; sed -e "s/fullscreen:false/fullscreen:true/g" -I "" ~/Library/Application\ Support/PrismLauncher/instances/DQM/.minecraft/options.txt;
     ```
-11. 作成した構成をダブルクリックして起動します。
-    > [!CAUTION]
-    > 
-    > フルスクリーンを解除すると、ゲーム画面がブラックアウトし操作不能になる場合があります。絶対にフルスクリーンを解除しないでください。
-13. ビデオ設定でフルスクリーンをオンにします。
+8. 作成した構成をダブルクリックして起動します。
+> [!CAUTION]
+> 
+> フルスクリーンを解除すると、ゲーム画面がブラックアウトし操作不能になる場合があります。絶対にフルスクリーンを解除しないでください。
+9. ビデオ設定でフルスクリーンをオンにします。
 
 ### minecraftディレクトリにたどり着けない場合
 
