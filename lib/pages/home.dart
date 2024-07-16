@@ -178,7 +178,8 @@ class _HomePageState extends State<HomePage> {
               "Minecraft 1.5.2を起動させる",
               contents: Padding(
                 padding: EdgeInsets.symmetric(vertical: 8.0),
-                child: Text("作成したプロファイルを選択して起動し、閉じてください。"),
+                child: Text("ランチャーを再起動し、作成したプロファイルを選択して起動して閉じてください。"
+                    "この地点でクラッシュする場合がありますが、問題ありません (インストールの過程で修正されます)。"),
               ),
             ),
             _InstallationFlow(
@@ -189,7 +190,7 @@ class _HomePageState extends State<HomePage> {
                   ElevatedButton(
                     child: const Text("DQM MOD本体/前提MOD/SE・BGM"),
                     onPressed: () {
-                      launchUrlString("http://dqm4mod.wixsite.com/home/");
+                      launchUrlString("https://dqm4mod.wixsite.com/home/");
                     },
                   ),
                   const SizedBox(height: 8),
@@ -197,7 +198,7 @@ class _HomePageState extends State<HomePage> {
                     child: const Text("Forge 1.5.2-7.8.1.738 Universal"),
                     onPressed: () {
                       launchUrlString(
-                          "http://adfoc.us/serve/?id=27122854926913");
+                          "https://adfoc.us/serve/?id=27122878887873");
                     },
                   ),
                 ],
