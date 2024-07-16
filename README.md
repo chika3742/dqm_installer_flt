@@ -64,4 +64,4 @@ M1シリーズを搭載したMacでMinecraft 1.5.2を起動すると、光の三
 
 ## 利用方法
 
-今後記事を投稿予定です。
+https://www.chikach.net/category/works/dqm-installer-new-how-to-use
