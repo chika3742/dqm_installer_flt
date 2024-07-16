@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dqm_installer_flt/libs/profiles.dart';
 import 'package:dqm_installer_flt/utils/utils.dart';
+import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
 class CompatibilityChecker {
@@ -19,26 +20,53 @@ class CompatibilityChecker {
     "saves",
   ];
 
-  String get errorMessage {
-    var builder = StringBuffer();
+  List<Widget> get errorMessage {
+    final texts = <Widget>[];
 
     if (!profileFileExists) {
-      builder.writeln("プロファイルデータが見つかりません。ランチャーを1度起動してください。");
+      texts.add(const Text("プロファイルデータが見つかりません。ランチャーを1度起動してください。"));
     }
     if (incompatibleProfiles.isNotEmpty) {
-      builder.writeln(
-          "起動構成「${incompatibleProfiles.join("」「")}」にゲームディレクトリを設定してください。");
+      texts.add(Text.rich(TextSpan(
+        children: [
+          const TextSpan(text: "起動構成"),
+          for (var profile in incompatibleProfiles)
+            TextSpan(
+              children: [
+                const TextSpan(text: "「"),
+                TextSpan(
+                    text: profile,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                const TextSpan(text: "」"),
+              ],
+            ),
+          const TextSpan(text: "にゲームディレクトリを設定してください。"),
+        ],
+      )));
     }
     if (directoriesNotEmpty.isNotEmpty) {
-      builder.writeln(
-          ".minecraftフォルダー内のフォルダー「${directoriesNotEmpty.join("」「")}」を空にしてください。必要なファイルが入っている場合はバックアップを取ってください。");
+      texts.add(Text.rich(TextSpan(
+        children: [
+          const TextSpan(text: ".minecraftフォルダー内のフォルダー"),
+          for (var dir in directoriesNotEmpty)
+            TextSpan(
+              children: [
+                const TextSpan(text: "「"),
+                TextSpan(
+                    text: dir,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                const TextSpan(text: "」"),
+              ],
+            ),
+          const TextSpan(text: "を空にしてください。必要なファイルが入っている場合はバックアップを取ってください。"),
+        ],
+      )));
     }
     if (failedToCheck) {
-      builder.writeln("チェックに失敗しました。");
-      builder.writeln(checkErrorMessage);
+      texts.add(Text("チェックに失敗しました: $checkErrorMessage"));
     }
 
-    return builder.toString().trim();
+    return texts;
   }
 
   Future<void> check() async {
