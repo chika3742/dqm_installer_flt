@@ -124,6 +124,26 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
+            if (Platform.isMacOS)
+              _InstallationFlow(
+                "macOSにおける表示問題について",
+                contents: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Apple M1シリーズ (M2以降も含む) のMacをお使いの場合、"
+                        "Minecraft 1.5.2におけるゲーム画面が正常に表示されません。\n"
+                        "必ず以下のページをご覧になってからインストールを進めてください。"),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        launchUrlString(
+                            "https://github.com/chika3742/dqm_installer_flt?tab=readme-ov-file#apple-silicon-mac%E3%81%A7%E3%81%AE%E8%A1%A8%E7%A4%BA%E3%81%AE%E4%BF%AE%E6%AD%A3");
+                      },
+                      child: const Text("Apple Silicon Macでの表示の修正について"),
+                    )
+                  ],
+                ),
+              ),
             _InstallationFlow(
               "Minecraft 1.5.2を起動するプロファイルを作成する",
               contents: Column(
