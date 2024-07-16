@@ -36,10 +36,28 @@ class _HomePageState extends State<HomePage> {
   final _skinController = TextEditingController();
   final _additionalMods = <AdditionalMod>[];
 
+  final _scrollController = ScrollController();
+  bool _showBlur = true;
+
   @override
   void initState() {
     super.initState();
     checkWhetherCanBeInstalled();
+    _scrollController.addListener(() {
+      final showBlur = _scrollController.position.pixels <
+          _scrollController.position.maxScrollExtent;
+      if (showBlur != _showBlur) {
+        setState(() {
+          _showBlur = showBlur;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _scrollController.dispose();
   }
 
   @override
@@ -48,250 +66,266 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text("DQM Installer"),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: _FlowTimeline([
-            _InstallationFlow(
-              "インストール可能な環境かチェックする",
-              contents: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (checker.hasError)
-                    const Row(
-                      children: [
-                        Icon(Icons.warning, color: Colors.orange, size: 20),
-                        SizedBox(width: 4),
-                        Text("インストール前に準備が必要です",
-                            style: TextStyle(color: Colors.red)),
-                      ],
-                    )
-                  else
-                    const Row(
-                      children: [
-                        Icon(Icons.check, color: Colors.green, size: 20),
-                        SizedBox(width: 4),
-                        Text("インストール可能です。"),
-                      ],
-                    ),
-                  if (checker.hasError)
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          for (final error in checker.errorMessage)
-                            Card(
-                              color: Colors.red.shade100,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 8.0, horizontal: 16.0),
-                                child: error,
-                              ),
-                            )
-                        ],
-                      ),
-                    ),
-                  if (checker.hasError)
-                    const Text("これらのエラーは無視することもできますが、動作は保証しません。"),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        OutlinedButton(
-                          onPressed: () {
-                            checkWhetherCanBeInstalled();
-                          },
-                          child: const Row(
-                            children: [
-                              Icon(Icons.refresh),
-                              SizedBox(width: 8),
-                              Text("再チェックする"),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        OutlinedButton(
-                          onPressed: () {
-                            launchUrl(
-                                Directory(getMinecraftDirectoryPath()).uri);
-                          },
-                          child: const Text(".minecraftフォルダーを開く"),
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
-            if (Platform.isMacOS)
+      body: ShaderMask(
+        blendMode: BlendMode.dstIn,
+        shaderCallback: (bounds) {
+          return LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.white,
+              Colors.white.withOpacity(0.05),
+            ],
+            stops: [_showBlur ? 0.9 : 1, 1],
+          ).createShader(bounds);
+        },
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: _FlowTimeline([
               _InstallationFlow(
-                "macOSにおける表示問題について",
+                "インストール可能な環境かチェックする",
                 contents: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("Apple M1シリーズ (M2以降も含む) のMacをお使いの場合、"
-                        "Minecraft 1.5.2におけるゲーム画面が正常に表示されません。\n"
-                        "必ず以下のページをご覧になってからインストールを進めてください。"),
-                    const SizedBox(height: 8),
-                    ElevatedButton(
-                      onPressed: () {
-                        launchUrlString(
-                            "https://github.com/chika3742/dqm_installer_flt?tab=readme-ov-file#apple-silicon-mac%E3%81%A7%E3%81%AE%E8%A1%A8%E7%A4%BA%E3%81%AE%E4%BF%AE%E6%AD%A3");
-                      },
-                      child: const Text("Apple Silicon Macでの表示の修正について"),
+                    if (checker.hasError)
+                      const Row(
+                        children: [
+                          Icon(Icons.warning, color: Colors.orange, size: 20),
+                          SizedBox(width: 4),
+                          Text("インストール前に準備が必要です",
+                              style: TextStyle(color: Colors.red)),
+                        ],
+                      )
+                    else
+                      const Row(
+                        children: [
+                          Icon(Icons.check, color: Colors.green, size: 20),
+                          SizedBox(width: 4),
+                          Text("インストール可能です。"),
+                        ],
+                      ),
+                    if (checker.hasError)
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            for (final error in checker.errorMessage)
+                              Card(
+                                color: Colors.red.shade100,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8.0, horizontal: 16.0),
+                                  child: error,
+                                ),
+                              )
+                          ],
+                        ),
+                      ),
+                    if (checker.hasError)
+                      const Text("これらのエラーは無視することもできますが、動作は保証しません。"),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          OutlinedButton(
+                            onPressed: () {
+                              checkWhetherCanBeInstalled();
+                            },
+                            child: const Row(
+                              children: [
+                                Icon(Icons.refresh),
+                                SizedBox(width: 8),
+                                Text("再チェックする"),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          OutlinedButton(
+                            onPressed: () {
+                              launchUrl(
+                                  Directory(getMinecraftDirectoryPath()).uri);
+                            },
+                            child: const Text(".minecraftフォルダーを開く"),
+                          ),
+                        ],
+                      ),
                     )
                   ],
                 ),
               ),
-            _InstallationFlow(
-              "Minecraft 1.5.2を起動するプロファイルを作成する",
-              contents: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "下のボタンをクリックして Minecraft 1.5.2 のプロファイルを作成します。",
+              if (Platform.isMacOS)
+                _InstallationFlow(
+                  "macOSにおける表示問題について",
+                  contents: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("Apple M1シリーズ (M2以降も含む) のMacをお使いの場合、"
+                          "Minecraft 1.5.2におけるゲーム画面が正常に表示されません。\n"
+                          "必ず以下のページをご覧になってからインストールを進めてください。"),
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: () {
+                          launchUrlString(
+                              "https://github.com/chika3742/dqm_installer_flt?tab=readme-ov-file#apple-silicon-mac%E3%81%A7%E3%81%AE%E8%A1%A8%E7%A4%BA%E3%81%AE%E4%BF%AE%E6%AD%A3");
+                        },
+                        child: const Text("Apple Silicon Macでの表示の修正について"),
+                      )
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ElevatedButton(
-                      onPressed: !creating152Profile ? create152Profile : null,
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 100),
-                        child: creating152Profile
-                            ? Container(
-                                width: 30,
-                                height: 30,
-                                padding: const EdgeInsets.all(6),
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 3,
-                                    color: Colors.amber.shade700),
-                              )
-                            : const Text("プロファイルを作成する"),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const _InstallationFlow(
-              "Minecraft 1.5.2を起動させる",
-              contents: Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.0),
-                child: Text("ランチャーを再起動し、作成したプロファイルを選択して起動して閉じてください。"
-                    "この地点でクラッシュする場合がありますが、問題ありません (インストールの過程で修正されます)。"),
-              ),
-            ),
-            _InstallationFlow(
-              "必要なファイルをダウンロードする",
-              contents: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ElevatedButton(
-                    child: const Text("DQM MOD本体/前提MOD/SE・BGM"),
-                    onPressed: () {
-                      launchUrlString("https://dqm4mod.wixsite.com/home/");
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    child: const Text("Forge 1.5.2-7.8.1.738 Universal"),
-                    onPressed: () {
-                      launchUrlString(
-                          "https://adfoc.us/serve/?id=27122878887873");
-                    },
-                  ),
-                ],
-              ),
-            ),
-            _InstallationFlow(
-              "ダウンロードしたファイルを読み込む",
-              contents: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
+                ),
+              _InstallationFlow(
+                "Minecraft 1.5.2を起動するプロファイルを作成する",
+                contents: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ElevatedButton(
-                      child: const Text("フォルダーから自動的に認識"),
-                      onPressed: () async {
-                        var result =
-                            await FilePicker.platform.getDirectoryPath();
-
-                        if (result != null) {
-                          Directory(result).list().listen((event) {
-                            var fileName =
-                                path.basenameWithoutExtension(event.path);
-                            if (fileName.contains("DQM") &&
-                                fileName.contains("jar")) {
-                              _prerequisiteModController.text = event.path;
-                            } else if (fileName.contains("DQM") &&
-                                fileName.contains("mods")) {
-                              _bodyModController.text = event.path;
-                            } else if (fileName.contains("DQM") &&
-                                fileName.contains("音声")) {
-                              _bgmController.text = event.path;
-                            } else if (fileName ==
-                                "forge-1.5.2-7.8.1.738-universal") {
-                              _forgeController.text = event.path;
-                            }
-                          });
-                        }
-                      },
+                    const Text(
+                      "下のボタンをクリックして Minecraft 1.5.2 のプロファイルを作成します。",
                     ),
-                    const SizedBox(height: 16),
-                    _FileFormField(
-                      label: "DQM 前提MOD",
-                      controller: _prerequisiteModController,
-                    ),
-                    const SizedBox(height: 16),
-                    _FileFormField(
-                      label: "DQM 本体MOD",
-                      controller: _bodyModController,
-                    ),
-                    const SizedBox(height: 16),
-                    _FileFormField(
-                      label: "DQM 音声・BGM",
-                      controller: _bgmController,
-                    ),
-                    const SizedBox(height: 16),
-                    _FileFormField(
-                      label: "Forge",
-                      controller: _forgeController,
-                    ),
-                    const SizedBox(height: 16),
-                    _FileFormField(
-                      label: "スキン (任意)",
-                      hint: "デフォルト (Steve)",
-                      skin: true,
-                      controller: _skinController,
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton(
+                        onPressed:
+                            !creating152Profile ? create152Profile : null,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 100),
+                          child: creating152Profile
+                              ? Container(
+                                  width: 30,
+                                  height: 30,
+                                  padding: const EdgeInsets.all(6),
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 3,
+                                      color: Colors.amber.shade700),
+                                )
+                              : const Text("プロファイルを作成する"),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
-            _InstallationFlow(
-              "導入推奨MODの選択",
-              contents: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _ModCheckboxList(selected: _additionalMods),
-                ],
+              const _InstallationFlow(
+                "Minecraft 1.5.2を起動させる",
+                contents: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text("ランチャーを再起動し、作成したプロファイルを選択して起動して閉じてください。"
+                      "この地点でクラッシュする場合がありますが、問題ありません (インストールの過程で修正されます)。"),
+                ),
               ),
-            ),
-            _InstallationFlow(
-              "インストールする",
-              contents: Center(
-                child: SizedBox(
-                  height: 40,
-                  width: 200,
-                  child: ElevatedButton(
-                    onPressed: beginInstallation,
-                    child: const Text("インストール開始"),
+              _InstallationFlow(
+                "必要なファイルをダウンロードする",
+                contents: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ElevatedButton(
+                      child: const Text("DQM MOD本体/前提MOD/SE・BGM"),
+                      onPressed: () {
+                        launchUrlString("https://dqm4mod.wixsite.com/home/");
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      child: const Text("Forge 1.5.2-7.8.1.738 Universal"),
+                      onPressed: () {
+                        launchUrlString(
+                            "https://adfoc.us/serve/?id=27122878887873");
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              _InstallationFlow(
+                "ダウンロードしたファイルを読み込む",
+                contents: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ElevatedButton(
+                        child: const Text("フォルダーから自動的に認識"),
+                        onPressed: () async {
+                          var result =
+                              await FilePicker.platform.getDirectoryPath();
+
+                          if (result != null) {
+                            Directory(result).list().listen((event) {
+                              var fileName =
+                                  path.basenameWithoutExtension(event.path);
+                              if (fileName.contains("DQM") &&
+                                  fileName.contains("jar")) {
+                                _prerequisiteModController.text = event.path;
+                              } else if (fileName.contains("DQM") &&
+                                  fileName.contains("mods")) {
+                                _bodyModController.text = event.path;
+                              } else if (fileName.contains("DQM") &&
+                                  fileName.contains("音声")) {
+                                _bgmController.text = event.path;
+                              } else if (fileName ==
+                                  "forge-1.5.2-7.8.1.738-universal") {
+                                _forgeController.text = event.path;
+                              }
+                            });
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _FileFormField(
+                        label: "DQM 前提MOD",
+                        controller: _prerequisiteModController,
+                      ),
+                      const SizedBox(height: 16),
+                      _FileFormField(
+                        label: "DQM 本体MOD",
+                        controller: _bodyModController,
+                      ),
+                      const SizedBox(height: 16),
+                      _FileFormField(
+                        label: "DQM 音声・BGM",
+                        controller: _bgmController,
+                      ),
+                      const SizedBox(height: 16),
+                      _FileFormField(
+                        label: "Forge",
+                        controller: _forgeController,
+                      ),
+                      const SizedBox(height: 16),
+                      _FileFormField(
+                        label: "スキン (任意)",
+                        hint: "デフォルト (Steve)",
+                        skin: true,
+                        controller: _skinController,
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
-          ]),
+              _InstallationFlow(
+                "導入推奨MODの選択",
+                contents: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _ModCheckboxList(selected: _additionalMods),
+                  ],
+                ),
+              ),
+              _InstallationFlow(
+                "インストールする",
+                contents: Center(
+                  child: SizedBox(
+                    height: 40,
+                    width: 200,
+                    child: ElevatedButton(
+                      onPressed: beginInstallation,
+                      child: const Text("インストール開始"),
+                    ),
+                  ),
+                ),
+              ),
+            ]),
+          ),
         ),
       ),
     );
