@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:dqm_installer_flt/libs/profiles.dart';
 import 'package:dqm_installer_flt/utils/utils.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CompatibilityChecker {
   bool profileFileExists = false;
@@ -47,7 +49,17 @@ class CompatibilityChecker {
     if (directoriesNotEmpty.isNotEmpty) {
       texts.add(Text.rich(TextSpan(
         children: [
-          const TextSpan(text: ".minecraftフォルダー内のフォルダー"),
+          TextSpan(
+              text: ".minecraftフォルダー",
+              recognizer: TapGestureRecognizer()
+                ..onTap =
+                    () => launchUrl(Uri.directory(getMinecraftDirectoryPath())),
+              style: const TextStyle(
+                color: Colors.blueAccent,
+                decoration: TextDecoration.underline,
+                decorationColor: Colors.blueAccent,
+              )),
+          const TextSpan(text: "内のフォルダー"),
           for (var dir in directoriesNotEmpty)
             TextSpan(
               children: [
