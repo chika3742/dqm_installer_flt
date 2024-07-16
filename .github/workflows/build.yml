@@ -38,7 +38,7 @@ jobs:
           
           cd build\windows\x64\runner
           Move-Item -Path Release -Destination dqm_installer_flt
-          Compress-Archive -DestinationPath ..\..\..\$FILENAME -Path dqm_installer_flt
+          Compress-Archive -DestinationPath ..\..\..\..\$FILENAME -Path dqm_installer_flt
 
       - name: Release
         uses: softprops/action-gh-release@v1
