@@ -39,10 +39,14 @@ M1シリーズを搭載したMacでMinecraft 1.5.2を起動すると、光の三
     rm -r ~/Library/Application\ Support/PrismLauncher/instances/DQM/.minecraft; ln -s ~/Library/Application\ Support/minecraft ~/Library/Application\ Support/PrismLauncher/instances/DQM/.minecraft; sed -e "s/fullscreen:false/fullscreen:true/g" -I "" ~/Library/Application\ Support/PrismLauncher/instances/DQM/.minecraft/options.txt;
     ```
 8. 作成した構成をダブルクリックして起動します。
+
 > [!CAUTION]
 > 
-> フルスクリーンを解除すると、ゲーム画面がブラックアウトし操作不能になる場合があります。絶対にフルスクリーンを解除しないでください。
-9. ビデオ設定でフルスクリーンをオンにします。
+> フルスクリーンを解除するとゲーム画面がブラックアウトし操作不能になる場合があります。絶対にフルスクリーンを解除しないでください。
+> 万が一フルスクリーンを解除してしまった場合は、以下のコマンドを実行してください。
+> ```
+> sed -e "s/fullscreen:false/fullscreen:true/g" -I "" ~/Library/Application\ Support/PrismLauncher/instances/DQM/.minecraft/options.txt;
+> ```
 
 ### minecraftディレクトリにたどり着けない場合
 
