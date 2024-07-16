@@ -11,7 +11,7 @@ jobs:
   build_windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install FVM
         run: choco install fvm
@@ -41,7 +41,7 @@ jobs:
           Compress-Archive -DestinationPath ..\..\..\..\$FILENAME -Path dqm_installer_flt
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           draft: true
           files: ${{ steps.compress.outputs.FILENAME }}
@@ -49,7 +49,7 @@ jobs:
   build_macos:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install FVM
         run: curl -fsSL https://fvm.app/install.sh | bash
@@ -85,7 +85,7 @@ jobs:
           xcodebuild -workspace ./macos/Runner.xcworkspace -scheme Runner archive
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           draft: true
           files: build/macos/notarized/*.dmg
@@ -93,7 +93,7 @@ jobs:
   build_linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install FVM
         run: curl -fsSL https://fvm.app/install.sh | bash
@@ -122,7 +122,7 @@ jobs:
           zip -r dqm_installer_flt_${VERSION}_linux.zip ./dqm_installer_flt
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           draft: true
           files: build/linux/x64/release/dqm_installer_flt_*.zip
