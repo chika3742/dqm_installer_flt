@@ -39,7 +39,7 @@ M1シリーズを搭載したMacでMinecraft 1.5.2を起動すると、光の三
 2. [Prism Launcher](https://prismlauncher.org/download/mac/)をインストールし、起動します。
 3. 「起動構成を追加」をクリックし、「名前」を「__DQM__」、「バージョン」で「1.5.2」を選択し、保存します。
 4. 作成した構成を右クリックし、「編集」をクリックします。
-5. 「バージョン」タブ→「Miencraft jarを置換」をクリックします。ファイル選択画面が表示されたら、⌘⇧G（Command + Shift + G）を同時に押し、以下の文字列を貼り付けてReturnを押してください。
+5. 「バージョン」タブ→「minecraft.jarを置換」をクリックします。ファイル選択画面が表示されたら、⌘⇧G（Command + Shift + G）を同時に押し、以下の文字列を貼り付けてReturnを押してください。
    ```
    ~/Library/Application Support/minecraft/versions
    ```
