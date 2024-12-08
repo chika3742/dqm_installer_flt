@@ -39,12 +39,16 @@ M1シリーズを搭載したMacでMinecraft 1.5.2を起動すると、光の三
 2. [Prism Launcher](https://prismlauncher.org/download/mac/)をインストールし、起動します。
 3. 「起動構成を追加」をクリックし、「名前」を「__DQM__」、「バージョン」で「1.5.2」を選択し、保存します。
 4. 作成した構成を右クリックし、「編集」をクリックします。
-5. 「バージョン」タブ→「Miencraft jarを置き換え」をクリックし、<br>`（自身のユーザー名）`→`Library`→`Application Support`→`minecraft`→`versions`→`DQMV vX.XX`→`DQMV vX.XX.jar`と辿って選択してください。`（自身のユーザー名）`および`Library`フォルダーが見当たらない場合は、[こちらを参照してください](#minecraftディレクトリにたどり着けない場合)。
-6. 「設定」タブ→「Javaの指定」にチェック→「自動検出」より、「バージョン」が`1.8.x_xxx`となっているものを選択します。<br>無い場合は、[こちらのページ](https://www.azul.com/downloads/?version=java-8-lts&os=macos&architecture=arm-64-bit&package=jdk#zulu)を開きます。少し下にスクロールしてしばらく待つと１つだけ項目が表示されるはずなので、右側のDownloadよりdmgファイルをダウンロードし、指示に従ってインストールしてください。
+5. 「バージョン」タブ→「Miencraft jarを置換」をクリックします。ファイル選択画面が表示されたら、⌘⇧G（Command + Shift + G）を同時に押し、以下の文字列を貼り付けてReturnを押してください。
+   ```
+   ~/Library/Application Support/minecraft/versions
+   ```
+6. DQMV vX.XX フォルダーの中にある DQMV vX.XX.jar（Xはバージョン）をダブルクリックして選択します。
+6. 「設定」タブ→「Javaの指定」にチェック→「自動検出」より、「バージョン」が`1.8`で始まっているもの（18ではなく）を選択します。<br>無い場合は、[こちらのページ](https://www.azul.com/downloads/?version=java-8-lts&os=macos&architecture=arm-64-bit&package=jdk#zulu)を開きます。少し下にスクロールしてしばらく待つと１つだけ項目が表示されるはずなので、右側のDownloadよりdmgファイルをダウンロードし、指示に従ってインストールしてください。
 7. Spotlight検索等でターミナルを起動し、以下のコマンドを実行します。
 
     ```bash
-    rm -r ~/Library/Application\ Support/PrismLauncher/instances/DQM/.minecraft; ln -s ~/Library/Application\ Support/minecraft ~/Library/Application\ Support/PrismLauncher/instances/DQM/.minecraft; sed -e "s/fullscreen:false/fullscreen:true/g" -I "" ~/Library/Application\ Support/PrismLauncher/instances/DQM/.minecraft/options.txt;
+    rm -r ~/Library/Application\ Support/PrismLauncher/instances/DQM/minecraft; ln -s ~/Library/Application\ Support/minecraft ~/Library/Application\ Support/PrismLauncher/instances/DQM/minecraft; sed -e "s/fullscreen:false/fullscreen:true/g" -I "" ~/Library/Application\ Support/PrismLauncher/instances/DQM/minecraft/options.txt;
     ```
 8. 作成した構成をダブルクリックして起動します。
 
@@ -53,14 +57,8 @@ M1シリーズを搭載したMacでMinecraft 1.5.2を起動すると、光の三
 > フルスクリーンを解除するとゲーム画面がブラックアウトし操作不能になる場合があります。絶対にフルスクリーンを解除しないでください。
 > 万が一フルスクリーンを解除してしまった場合は、以下のコマンドを実行し、Minecraftを再起動してください。
 > ```
-> sed -e "s/fullscreen:false/fullscreen:true/g" -I "" ~/Library/Application\ Support/PrismLauncher/instances/DQM/.minecraft/options.txt;
+> sed -e "s/fullscreen:false/fullscreen:true/g" -I "" ~/Library/Application\ Support/PrismLauncher/instances/DQM/minecraft/options.txt;
 > ```
-
-### minecraftディレクトリにたどり着けない場合
-
-- Finderを起動→画面上部メニューバーの「表示」→「表示オプションを表示」で、「"ライブラリ"フォルダーの表示」にチェックが入っていることを確認
-- 画面左上の「Finder」→「設定」→「サイドバー」において、家アイコンに自身のユーザー名が書かれたチェックボックスにチェックが入っていることを確認
-- 「Miencraft jarを置き換え」をクリックし、サイドバーにある自身のユーザー名をクリックした後、`Library`以降を上記のように辿ってください。
 
 ## 利用方法
 
