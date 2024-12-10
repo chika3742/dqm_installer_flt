@@ -310,6 +310,14 @@ class _HomePageState extends State<HomePage> {
                 contents: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                      child: Text("インストール後に追加でMODをインストールしたい場合は、"
+                          "追加したいMODにチェックを入れて再度インストールを行ってください"
+                          "（※「フォルダーを空にしてください」というエラーは無視してください）。\n"
+                          "MODを削除したい場合は、.minecraft内のmodsフォルダーとcoremodsフォルダーから"
+                          "該当するMODを削除してください。"),
+                    ),
                     _ModCheckboxList(selected: _additionalMods),
                   ],
                 ),
