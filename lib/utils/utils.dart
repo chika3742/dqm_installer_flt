@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dqm_installer_flt/messages.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -36,6 +37,20 @@ Future<String> getTempPath() async {
     p = r"\\?\" + p;
   }
   return p;
+}
+
+Future<String> readFileWithPlatformEncoding(String path) async {
+  if (Platform.isWindows) {
+    return await SJisIOApi().readFileWithSJis(path);
+  }
+  return await File(path).readAsString(); // UTF-8
+}
+
+Future<void> writeFileWithPlatformEncoding(String path, String data) async {
+  if (Platform.isWindows) {
+    await SJisIOApi().writeFileWithSJis(path, data);
+  }
+  await File(path).writeAsString(data); // UTF-8
 }
 
 void showSnackBar(BuildContext context, String message,

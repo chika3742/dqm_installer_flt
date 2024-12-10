@@ -479,10 +479,9 @@ class _CreateDqmProfile extends Procedure {
       "options.txt",
     ));
     if (await optionsFile.exists()) {
-      await optionsFile.readAsString().then((data) {
-        return optionsFile
-            .writeAsString(data.replaceFirst(RegExp("lang:.*"), "lang:ja_JP"));
-      });
+      String optionsTxt = await readFileWithPlatformEncoding(optionsFile.path);
+      optionsTxt = optionsTxt.replaceFirst(RegExp("lang:.*"), "lang:ja_JP");
+      await writeFileWithPlatformEncoding(optionsFile.path, optionsTxt);
     }
 
     progress = 1;
