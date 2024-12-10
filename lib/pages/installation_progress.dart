@@ -102,11 +102,13 @@ class _InstallationProgressPageState extends State<InstallationProgressPage> {
       body: PopScope(
         canPop: false,
         onPopInvoked: (didPop) {
-          showAlertDialog(
-            context: context,
-            title: "インストール中",
-            message: "インストールはキャンセルできません",
-          );
+          if (!didPop) {
+            showAlertDialog(
+              context: context,
+              title: "インストール中",
+              message: "インストールはキャンセルできません",
+            );
+          }
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
