@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
+import 'package:crypto/crypto.dart';
 import 'package:dqm_installer_flt/libs/profiles.dart';
 import 'package:dqm_installer_flt/utils/utils.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -131,32 +133,18 @@ class _DownloadRequiredFiles extends Procedure {
   @override
   String get procedureTitle => "必要なファイルをダウンロードしています";
 
-  final List<DownloadableAsset> assetsToDownload = [
-    DownloadableAsset(
-        Uri.parse("https://r2.chikach.net/dqm-assets/steve.png"), 1284),
-    DownloadableAsset(
-        Uri.parse(
-            "https://r2.chikach.net/dqm-assets/deobfuscation_data_1.5.2.zip"),
-        201404),
-    DownloadableAsset(
-        Uri.parse("https://r2.chikach.net/dqm-assets/fml_libs15.zip"),
-        10545276),
-    DownloadableAsset(
-        Uri.parse("https://r2.chikach.net/dqm-assets/resources.zip"), 46833816),
-  ];
-
   @override
   Future<void> execute() async {
     super.execute();
 
-    assetsToDownload.addAll(installer.additionalMods
-        .map((e) => e.toFiles())
-        .expand((e) => e)
-        .toList());
+    final assetsToDownload = [
+      ...requiredAssets,
+      ...installer.additionalMods.map((e) => e.toFiles()).expand((e) => e),
+    ];
 
     var tempPath = await getTempPath();
-    final totalBytes = assetsToDownload.fold(
-        0, (value, element) => value + element.contentLength);
+    final totalBytes =
+        assetsToDownload.fold(0, (value, element) => value + element.size);
     var bytesDownloaded = 0;
 
     for (var i = 0; i < assetsToDownload.length; i++) {
@@ -185,8 +173,15 @@ class _DownloadRequiredFiles extends Procedure {
         fileSink.close();
         completer.complete();
       });
-
       await completer.future;
+
+      // compute file checksum
+      final checksum = await file.openRead().transform(md5).first;
+      if (checksum.toString().toUpperCase() != asset.md5.toUpperCase()) {
+        log("Checksum mismatch! (${checksum.toString().toUpperCase()} vs ${asset.md5.toUpperCase()})");
+        throw DqmInstallationException(
+            DqmInstallationError.failedToDownloadAsset);
+      }
     }
   }
 }
@@ -515,9 +510,14 @@ class ProgressInfo {
 
 class DownloadableAsset {
   final Uri url;
-  final int contentLength;
+  final int size;
+  final String md5;
 
-  const DownloadableAsset(this.url, this.contentLength);
+  const DownloadableAsset({
+    required this.url,
+    required this.size,
+    required this.md5,
+  });
 }
 
 enum DqmInstallationError {
