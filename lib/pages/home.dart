@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:dqm_installer_flt/libs/compatibility_checker.dart';
@@ -383,18 +384,20 @@ class _HomePageState extends State<HomePage> {
           ),
         );
       }
-    } on DqmInstallationException catch (e) {
-      if (e.code == DqmInstallationError.failedToParseDqmType) {
-        if (mounted) {
-          showAlertDialog(
-            context: context,
-            title: "DQMの種類の判別に失敗しました。",
-            message: "ファイル名が正しくない可能性があります。ダウンロードしたファイルのファイル名は絶対に変更しないでください。",
-          );
-        }
-        return;
+    } on DqmInstallationException {
+      if (mounted) {
+        showAlertDialog(
+          context: context,
+          title: "DQMの種類の判別に失敗しました。",
+          message: "ファイル名が正しくない可能性があります。ダウンロードしたファイルのファイル名は変更しないでください。",
+        );
       }
-      rethrow;
+    } catch (e, st) {
+      log("Failed to start installation", error: e, stackTrace: st);
+      saveErrorToFile(e, st);
+      showErrorSnackBar(context, "インストールを開始できませんでした。"
+          "本インストーラーの実行ファイルと同じフォルダーにエラーの詳細データが生成されているため、"
+          "その中身を添付の上開発者（X: @chikavoid）にご連絡ください。");
     }
   }
 

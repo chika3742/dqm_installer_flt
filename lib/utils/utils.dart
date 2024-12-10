@@ -65,7 +65,7 @@ void showSnackBar(BuildContext context, String message,
 
 void showErrorSnackBar(BuildContext context, String message) {
   showSnackBar(context, message,
-      color: Colors.red, duration: const Duration(seconds: 8));
+      color: Theme.of(context).colorScheme.error, duration: const Duration(seconds: 8));
 }
 
 void saveErrorToFile(Object e, StackTrace? st) {
