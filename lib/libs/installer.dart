@@ -22,7 +22,7 @@ class Installer {
   ///
   /// Initialized after [parseDqmFileName] is called.
   ///
-  late DqmType type;
+  late DqmType dqmType;
 
   ///
   /// Initialized after [parseDqmFileName] is called.
@@ -33,6 +33,7 @@ class Installer {
   /// Initialized after [parseDqmFileName] is called.
   ///
   late String versionName;
+
   final String prerequisiteModPath;
   final String bodyModPath;
   final String bgmPath;
@@ -59,11 +60,11 @@ class Installer {
       _CreateDqmProfile(this),
       _Cleanup(this),
     ];
-  }
 
-  void parseDqmFileName() {
-    _parseDqmType();
-    _parseDqmVersion();
+    final modFileName = path.basename(bodyModPath);
+    dqmType = parseDqmType(modFileName);
+    dqmVersion = parseDqmVersion(modFileName);
+    versionName = toVersionName(dqmType, dqmVersion);
   }
 
   void updateProgress() {
@@ -84,28 +85,28 @@ class Installer {
     }
   }
 
-  void _parseDqmType() {
-    var modFileName = path.basename(bodyModPath);
-    if (modFileName.contains("DQMIV")) {
-      type = DqmType.dqm4;
-    } else if (modFileName.contains("DQMV")) {
-      type = DqmType.dqm5;
-    } else if (modFileName.contains("不思議の")) {
-      type = DqmType.dqmDungeon;
+  static DqmType parseDqmType(String fileName) {
+    if (fileName.contains("DQMIV")) {
+      return DqmType.dqm4;
+    } else if (fileName.contains("DQMV")) {
+      return DqmType.dqm5;
+    } else if (fileName.contains("不思議の")) {
+      return DqmType.dqmDungeon;
     } else {
       throw DqmInstallationException(DqmInstallationError.failedToParseDqmType);
     }
   }
 
-  void _parseDqmVersion() {
-    var modFileName = path.basename(bodyModPath);
-    final match = RegExp("Ver\\.*(\\d+\\.\\d+)").firstMatch(modFileName);
+  static String parseDqmVersion(String fileName) {
+    final match = RegExp("Ver\\.*(\\d+\\.\\d+)").firstMatch(fileName);
     if (match == null || match.group(1) == null) {
       throw DqmInstallationException(DqmInstallationError.failedToParseDqmType);
     }
-    dqmVersion = match.group(1)!;
+    return match.group(1)!;
+  }
 
-    versionName = "${type.toNameString()} v$dqmVersion";
+  static String toVersionName(DqmType dqmType, String dqmVersion) {
+    return "${dqmType.toNameString()} v$dqmVersion";
   }
 }
 
@@ -125,7 +126,7 @@ abstract class Procedure {
 }
 
 class _DownloadRequiredFiles extends Procedure {
-  _DownloadRequiredFiles(Installer installer) : super(installer);
+  _DownloadRequiredFiles(super.installer);
 
   @override
   String get procedureTitle => "必要なファイルをダウンロードしています";
@@ -191,7 +192,7 @@ class _DownloadRequiredFiles extends Procedure {
 }
 
 class _CopyRequiredFiles extends Procedure {
-  _CopyRequiredFiles(Installer installer) : super(installer);
+  _CopyRequiredFiles(super.installer);
 
   @override
   String get procedureTitle => "必要なファイルをコピーしています。";
@@ -261,7 +262,7 @@ class _CopyRequiredFiles extends Procedure {
 }
 
 class _ExtractFiles extends Procedure {
-  _ExtractFiles(Installer installer) : super(installer);
+  _ExtractFiles(super.installer);
 
   @override
   String get procedureTitle => "前提MODとForgeを展開しています。";
@@ -333,7 +334,7 @@ class _ExtractFiles extends Procedure {
 }
 
 class _CompressFiles extends Procedure {
-  _CompressFiles(Installer installer) : super(installer);
+  _CompressFiles(super.installer);
 
   @override
   String get procedureTitle => "Minecraft実行ファイルを作成しています";
@@ -371,7 +372,7 @@ class _CompressFiles extends Procedure {
 }
 
 class _ExtractVanillaSe extends Procedure {
-  _ExtractVanillaSe(Installer installer) : super(installer);
+  _ExtractVanillaSe(super.installer);
 
   @override
   String get procedureTitle => "BGM/SEを展開しています。";
@@ -412,7 +413,7 @@ class _ExtractVanillaSe extends Procedure {
 }
 
 class _ExtractLibs extends Procedure {
-  _ExtractLibs(Installer installer) : super(installer);
+  _ExtractLibs(super.installer);
 
   @override
   String get procedureTitle => "libファイルを展開しています。";
@@ -453,7 +454,7 @@ class _ExtractLibs extends Procedure {
 }
 
 class _CreateDqmProfile extends Procedure {
-  _CreateDqmProfile(Installer installer) : super(installer);
+  _CreateDqmProfile(super.installer);
 
   @override
   String get procedureTitle => "DQMプロファイルを作成しています。";
@@ -463,7 +464,7 @@ class _CreateDqmProfile extends Procedure {
     super.execute();
 
     final profileData = await MinecraftProfile().parse();
-    profileData["profiles"][installer.type.toNameString()] =
+    profileData["profiles"][installer.dqmType.toNameString()] =
         MinecraftProfileEntry(
       created: DateTime.now().toIso8601String(),
       icon: "Carved_Pumpkin",
@@ -490,7 +491,7 @@ class _CreateDqmProfile extends Procedure {
 }
 
 class _Cleanup extends Procedure {
-  _Cleanup(Installer installer) : super(installer);
+  _Cleanup(super.installer);
 
   @override
   String get procedureTitle => "クリーンアップしています。";

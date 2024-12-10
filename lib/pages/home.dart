@@ -1,8 +1,8 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dqm_installer_flt/libs/compatibility_checker.dart';
 import 'package:dqm_installer_flt/libs/installer.dart';
-import 'package:dqm_installer_flt/libs/possible_error.dart';
 import 'package:dqm_installer_flt/libs/profiles.dart';
 import 'package:dqm_installer_flt/pages/installation_progress.dart';
 import 'package:dqm_installer_flt/utils/precondition.dart';
@@ -18,7 +18,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import '../data.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   static const routeName = "/";
 
@@ -29,11 +29,30 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   bool creating152Profile = false;
   CompatibilityChecker checker = CompatibilityChecker();
-  final _prerequisiteModController = TextEditingController();
-  final _bodyModController = TextEditingController();
-  final _bgmController = TextEditingController();
-  final _forgeController = TextEditingController();
-  final _skinController = TextEditingController();
+  final _files = <String, LoadableFile>{
+    "pre": LoadableFile(
+      title: "DQM 前提MOD",
+      pickerAllowedExtensions: ["zip", "jar"],
+    ),
+    "body": LoadableFile(
+      title: "DQM 本体MOD",
+      pickerAllowedExtensions: ["zip", "jar"],
+    ),
+    "sound": LoadableFile(
+      title: "DQM 音声・BGM",
+      pickerAllowedExtensions: ["zip", "jar"],
+    ),
+    "forge": LoadableFile(
+      title: "Forge",
+      pickerAllowedExtensions: ["zip", "jar"],
+    ),
+    "skin": LoadableFile(
+      title: "スキン",
+      formFieldHint: "デフォルト（Steve）",
+      optional: true,
+      pickerAllowedExtensions: ["png"],
+    ),
+  };
   final _additionalMods = <AdditionalMod>[];
 
   final _scrollController = ScrollController();
@@ -256,48 +275,32 @@ class _HomePageState extends State<HomePage> {
                                   path.basenameWithoutExtension(event.path);
                               if (fileName.contains("DQM") &&
                                   fileName.contains("jar")) {
-                                _prerequisiteModController.text = event.path;
+                                _files["pre"]!.pathController.text = event.path;
                               } else if (fileName.contains("DQM") &&
                                   fileName.contains("mods")) {
-                                _bodyModController.text = event.path;
+                                _files["body"]!.pathController.text = event.path;
                               } else if (fileName.contains("DQM") &&
                                   fileName.contains("音声")) {
-                                _bgmController.text = event.path;
+                                _files["sound"]!.pathController.text = event.path;
                               } else if (fileName ==
                                   "forge-1.5.2-7.8.1.738-universal") {
-                                _forgeController.text = event.path;
+                                _files["forge"]!.pathController.text = event.path;
                               }
                             });
                           }
                         },
                       ),
                       const SizedBox(height: 16),
-                      _FileFormField(
-                        label: "DQM 前提MOD",
-                        controller: _prerequisiteModController,
-                      ),
-                      const SizedBox(height: 16),
-                      _FileFormField(
-                        label: "DQM 本体MOD",
-                        controller: _bodyModController,
-                      ),
-                      const SizedBox(height: 16),
-                      _FileFormField(
-                        label: "DQM 音声・BGM",
-                        controller: _bgmController,
-                      ),
-                      const SizedBox(height: 16),
-                      _FileFormField(
-                        label: "Forge",
-                        controller: _forgeController,
-                      ),
-                      const SizedBox(height: 16),
-                      _FileFormField(
-                        label: "スキン (任意)",
-                        hint: "デフォルト (Steve)",
-                        skin: true,
-                        controller: _skinController,
-                      ),
+                      for (final file in _files.values)
+                        ...[
+                          _FileFormField(
+                            label: file.title + (file.optional ? "（任意）" : ""),
+                            hint: file.formFieldHint,
+                            pickerAllowedExtensions: file.pickerAllowedExtensions,
+                            controller: file.pathController,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                     ],
                   ),
                 ),
@@ -336,112 +339,91 @@ class _HomePageState extends State<HomePage> {
     setState(() {});
   }
 
-  Future<void> beginInstallation() async {
-    final files = [
-      _prerequisiteModController.text,
-      _bodyModController.text,
-      _bgmController.text,
-      _forgeController.text,
-    ];
-
-    final errors = [
-      PossibleError("指定されたファイルの一部が存在しません。", () {
-        return checkAllModFilesExist(files, _skinController.text);
-      }),
-      const PossibleError("Step 2、Step 3を踏んでから再度お試しください。", check152JarExists),
-    ];
-
-    final checkResult = await checkErrors(errors);
-
-    if (!checkResult) {
-      return;
-    }
-
-    final installer = Installer(
-      prerequisiteModPath: _prerequisiteModController.text,
-      bodyModPath: _bodyModController.text,
-      bgmPath: _bgmController.text,
-      forgePath: _forgeController.text,
-      skinPath: _skinController.text,
-      additionalMods: _additionalMods,
-    );
-
+  Future<void> beginInstallation({List<String> skipIds = const []}) async {
     try {
-      installer.parseDqmFileName();
-    } catch (e, st) {
-      debugPrint(e.toString());
-      debugPrintStack(stackTrace: st);
+      final error = await _checkPrerequisites(skipIds: skipIds);
 
       if (!mounted) return;
-      await showAlertDialog(
-        context: context,
-        title: "DQMの種類の判別に失敗しました。",
-        message: "ファイル名が正しくない可能性があります。ダウンロードしたファイルのファイル名は絶対に変更しないでください。",
-      );
-    }
-
-    if (await isDqmAlreadyInstalled(installer.versionName)) {
-      if (!mounted) return;
-      final result = await showAlertDialog(
-        context: context,
-        title: "上書き確認",
-        message: "既にこのバージョンのDQMがインストールされています。上書きしますか？",
-        showCancel: true,
-      );
-      if (result != true) {
+      if (error != null) {
+        final result = await showAlertDialog(
+          context: context,
+          title: error.errorDialogTitle,
+          message: error.errorMessage,
+          showCancel: error.skipId != null,
+        );
+        if (error.skipId != null && result == true) {
+          beginInstallation(skipIds: [...skipIds, error.skipId!]);
+        }
         return;
       }
-    }
 
-    await checker.check();
+      if (mounted) {
+        final installer = Installer(
+          prerequisiteModPath: _files["pre"]!.pathController.text,
+          bodyModPath: _files["body"]!.pathController.text,
+          bgmPath: _files["sound"]!.pathController.text,
+          forgePath: _files["forge"]!.pathController.text,
+          skinPath: _files["skin"]!.pathController.text,
+          additionalMods: _additionalMods,
+        );
 
-    if (checker.hasError) {
-      if (!mounted) return;
-      final result = await showAlertDialog(
-        context: context,
-        title: "環境チェックを無視しますか？",
-        message: "Step 1の環境チェックにエラーがあります。続行しますか？",
-        showCancel: true,
-      );
-      if (result != true) {
+        Navigator.pushNamed(
+          context,
+          "/install",
+          arguments: InstallationProgressPageArguments(
+            installer: installer,
+          ),
+        );
+      }
+    } on DqmInstallationException catch (e) {
+      if (e.code == DqmInstallationError.failedToParseDqmType) {
+        if (mounted) {
+          showAlertDialog(
+            context: context,
+            title: "DQMの種類の判別に失敗しました。",
+            message: "ファイル名が正しくない可能性があります。ダウンロードしたファイルのファイル名は絶対に変更しないでください。",
+          );
+        }
         return;
       }
-    }
-
-    if (mounted) {
-      Navigator.pushNamed(
-        context,
-        "/install",
-        arguments: InstallationProgressPageArguments(
-          installer: installer,
-        ),
-      );
+      rethrow;
     }
   }
 
-  Future<bool> checkErrors(List<PossibleError> errors) async {
-    for (final error in errors) {
-      final result = await error.check().then((value) {
-        if (!value) {
-          showAlertDialog(
-              context: context, title: "エラー", message: error.errorMessage);
-          return false;
-        }
-        return true;
-      }).catchError((e, stackTrace) {
-        debugPrint(e.toString());
-        debugPrintStack(stackTrace: stackTrace);
+  Future<Prerequisite?> _checkPrerequisites({required List<String> skipIds}) async {
+    final prerequisites = <Prerequisite>[
+      // every file exists
+      FilePrerequisite(files: _files.values),
+      const Prerequisite(
+        test: check152JarExists,
+        errorDialogTitle: "エラー",
+        errorMessage: "Minecraft 1.5.2が一度も起動されていません。当該の手順を踏んでから再度お試しください。",
+      ),
+      Prerequisite(
+        test: () async {
+          final modFileName = path.basename(_files["body"]!.pathController.text);
+          final versionName = Installer.toVersionName(
+            Installer.parseDqmType(modFileName),
+            Installer.parseDqmVersion(modFileName),
+          );
+          return !await isDqmAlreadyInstalled(versionName); // returns true if not installed
+        },
+        errorDialogTitle: "上書き確認",
+        errorMessage: "既にこのバージョンのDQMがインストールされています。再度インストールを行いますか？",
+        skipId: "dqm_overwrite",
+      ),
+      Prerequisite(
+        test: () async {
+          await checker.check();
+          return !checker.hasError;
+        },
+        errorDialogTitle: "環境チェックを無視しますか？",
+        errorMessage: "Step 1の環境チェックにエラーがあります。インストールを行うこと自体は可能ですが、インストール後に正しく動作しない可能性があります。続行しますか？",
+        skipId: "env_check_not_successful",
+      ),
+    ];
 
-        return false;
-      });
-
-      if (!result) {
-        return false;
-      }
-    }
-
-    // no error
-    return true;
+    return Prerequisite.executeTests(prerequisites, skipIds);
   }
 
   Future<void> create152Profile() async {
@@ -474,7 +456,7 @@ class _HomePageState extends State<HomePage> {
 }
 
 class _FlowTimeline extends StatelessWidget {
-  const _FlowTimeline(this.flow, {Key? key}) : super(key: key);
+  const _FlowTimeline(this.flow);
 
   final List<_InstallationFlow> flow;
 
@@ -537,18 +519,17 @@ class _InstallationFlow {
 }
 
 class _FileFormField extends StatelessWidget {
-  const _FileFormField(
-      {Key? key,
-      required this.label,
-      this.hint,
-      required this.controller,
-      this.skin = false})
-      : super(key: key);
+  const _FileFormField({
+    required this.label,
+    this.hint,
+    required this.pickerAllowedExtensions,
+    required this.controller,
+  });
 
   final String label;
   final String? hint;
+  final List<String> pickerAllowedExtensions;
   final TextEditingController controller;
-  final bool skin;
 
   @override
   Widget build(BuildContext context) {
@@ -571,7 +552,7 @@ class _FileFormField extends StatelessWidget {
           onPressed: () async {
             var result = await FilePicker.platform.pickFiles(
                 type: FileType.custom,
-                allowedExtensions: skin ? ["png"] : ["jar", "zip"]);
+                allowedExtensions: pickerAllowedExtensions);
             if (result != null) {
               controller.text = result.files.single.path!;
             }
@@ -583,7 +564,7 @@ class _FileFormField extends StatelessWidget {
 }
 
 class _ModCheckboxList extends StatefulWidget {
-  const _ModCheckboxList({Key? key, required this.selected}) : super(key: key);
+  const _ModCheckboxList({required this.selected});
 
   final List<AdditionalMod> selected;
 
@@ -640,4 +621,76 @@ class _ModCheckboxListState extends State<_ModCheckboxList> {
   }
 }
 
+class Prerequisite {
+  const Prerequisite({
+    required this.test,
+    required this.errorDialogTitle,
+    required this.errorMessage,
+    this.skipId,
+  });
 
+  final FutureOr<bool> Function() test;
+  final String errorDialogTitle;
+  final String errorMessage;
+  /// If specified, this error treated as "ignorable", can be ignored by the
+  /// user and skip the dialog.
+  final String? skipId;
+
+  static Future<Prerequisite?> executeTests(
+    List<Prerequisite> items,
+    List<String> skipIds,
+  ) async {
+    for (final item in items) {
+      if (!skipIds.contains(item.skipId) && !await item.test()) {
+        return item;
+      }
+    }
+    return null;
+  }
+}
+
+class FilePrerequisite implements Prerequisite {
+  FilePrerequisite({required this.files});
+
+  final Iterable<LoadableFile> files;
+
+  List<LoadableFile> missingFiles = [];
+
+  @override
+  String get errorDialogTitle => "指定されたファイルが見つかりません";
+
+  @override
+  String get errorMessage => "「${missingFiles.map((e) => e.title).join("」「")}」に指定されているファイルは存在しません。";
+
+  @override
+  FutureOr<bool> Function() get test => () {
+    missingFiles.clear();
+    for (final file in files) {
+      if (file.pathController.text.isEmpty && file.optional) {
+        continue;
+      }
+      if (!File(file.pathController.text).existsSync()) {
+        missingFiles.add(file);
+      }
+    }
+    return missingFiles.isEmpty;
+  };
+
+  @override
+  String? get skipId => null;
+}
+
+class LoadableFile {
+  LoadableFile({
+    required this.title,
+    this.formFieldHint,
+    this.optional = false,
+    required this.pickerAllowedExtensions
+  }) : pathController = TextEditingController();
+
+  final String title;
+  final String? formFieldHint;
+  final TextEditingController pathController;
+  final bool optional;
+  final List<String> pickerAllowedExtensions;
+}
