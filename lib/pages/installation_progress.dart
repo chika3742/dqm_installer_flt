@@ -1,9 +1,10 @@
 import 'package:dqm_installer_flt/libs/installer.dart';
+import 'package:dqm_installer_flt/utils/ui.dart';
 import 'package:dqm_installer_flt/utils/utils.dart';
 import 'package:flutter/material.dart';
 
 class InstallationProgressPage extends StatefulWidget {
-  const InstallationProgressPage(this.arguments, {Key? key}) : super(key: key);
+  const InstallationProgressPage(this.arguments, {super.key});
 
   static const routeName = "/install";
 
@@ -98,27 +99,14 @@ class _InstallationProgressPageState extends State<InstallationProgressPage> {
         title: const Text("インストール中"),
         automaticallyImplyLeading: false,
       ),
-      body: WillPopScope(
-        onWillPop: () async {
-          showDialog(
+      body: PopScope(
+        canPop: false,
+        onPopInvoked: (didPop) {
+          showAlertDialog(
             context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text("インストール中"),
-                content: const Text("インストールはキャンセルできません"),
-                actions: [
-                  TextButton(
-                    child: const Text("OK"),
-                    onPressed: () {
-                      Navigator.pop(context, true);
-                    },
-                  ),
-                ],
-              );
-            },
+            title: "インストール中",
+            message: "インストールはキャンセルできません",
           );
-
-          return false;
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
