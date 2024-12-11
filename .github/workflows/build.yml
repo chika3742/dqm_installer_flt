@@ -54,7 +54,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install FVM
-        run: curl -fsSL https://fvm.app/install.sh | bash
+        run: |
+          brew tap leoafarias/fvm
+          brew install fvm
 
       - name: Install Flutter SDK
         run: fvm install
