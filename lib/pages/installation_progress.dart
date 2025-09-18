@@ -101,7 +101,7 @@ class _InstallationProgressPageState extends State<InstallationProgressPage> {
       ),
       body: PopScope(
         canPop: false,
-        onPopInvoked: (didPop) {
+        onPopInvokedWithResult: (didPop, _) {
           if (!didPop) {
             showAlertDialog(
               context: context,

@@ -94,7 +94,7 @@ class _HomePageState extends State<HomePage> {
             end: Alignment.bottomCenter,
             colors: [
               Colors.white,
-              Colors.white.withOpacity(0.05),
+              Colors.white.withValues(alpha: 0.05),
             ],
             stops: [_showBlur ? 0.9 : 1, 1],
           ).createShader(bounds);
