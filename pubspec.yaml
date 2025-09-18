@@ -33,10 +33,10 @@ dependencies:
   timelines:
     path: ./packages/timelines
   path: ^1.9.0
-  url_launcher: ^6.3.1
-  file_picker: ^8.1.4
-  archive: ^3.6.1
-  http: ^1.2.2
+  url_launcher: ^6.3.2
+  file_picker: ^10.3.3
+  archive: ^4.0.7
+  http: ^1.5.0
   path_provider: ^2.1.5
 
   # The following adds the Cupertino Icons font to your application.
@@ -53,7 +53,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^4.0.0
+  flutter_lints: ^6.0.0
   pigeon: ^22.7.0
 
 # For information on the generic Dart part of this file, see the

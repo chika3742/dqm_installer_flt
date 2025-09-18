@@ -276,9 +276,9 @@ class _ExtractFiles extends Procedure {
     final preModStream = InputFileStream(installer.prerequisiteModPath);
     final forgeStream = InputFileStream(installer.forgePath);
     final files = [
-      ...ZipDecoder().decodeBuffer(mcJarStream).files,
-      ...ZipDecoder().decodeBuffer(forgeStream).files,
-      ...ZipDecoder().decodeBuffer(preModStream).files,
+      ...ZipDecoder().decodeStream(mcJarStream).files,
+      ...ZipDecoder().decodeStream(forgeStream).files,
+      ...ZipDecoder().decodeStream(preModStream).files,
     ];
 
     var fileCount = 0;
@@ -383,8 +383,8 @@ class _ExtractVanillaSe extends Procedure {
     final bgmStream = InputFileStream(installer.bgmPath);
 
     final files = [
-      ...decoder.decodeBuffer(vanillaSeStream).files,
-      ...decoder.decodeBuffer(bgmStream).files,
+      ...decoder.decodeStream(vanillaSeStream).files,
+      ...decoder.decodeStream(bgmStream).files,
     ];
 
     var fileCount = 0;
@@ -423,7 +423,7 @@ class _ExtractLibs extends Procedure {
 
     var fileCount = 0;
 
-    var files = decoder.decodeBuffer(libStream).files;
+    var files = decoder.decodeStream(libStream).files;
     for (var file in files) {
       if (file.isFile) {
         final outputStream = OutputFileStream(path.join(
