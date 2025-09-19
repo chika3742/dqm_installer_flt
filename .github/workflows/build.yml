@@ -53,6 +53,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Use Xcode 26
+        run: xcode-select -s /Applications/Xcode_26.app
+
       - name: Install FVM
         run: |
           brew tap leoafarias/fvm
