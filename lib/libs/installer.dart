@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:archive/archive_io.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dqm_installer_flt/libs/profiles.dart';
 import 'package:dqm_installer_flt/libs/seven_zip.dart';
@@ -59,7 +58,6 @@ class Installer {
       _ExtractFiles(this),
       _CompressFiles(this),
       _ExtractVanillaSe(this),
-      _ExtractLibs(this),
       _CreateDqmProfile(this),
       _Cleanup(this),
     ];
@@ -277,28 +275,24 @@ class _ExtractFiles extends Procedure {
       "${installer.versionName}.jar",
     );
 
-    final archives = [
-      mcJarPath,
-      installer.prerequisiteModPath,
-      installer.forgePath,
-    ];
     final destDir = path.join(
       await getTempPath(),
       "extracted",
       "jar",
     );
+    final extracts = {
+      mcJarPath: destDir,
+      installer.prerequisiteModPath: destDir,
+      installer.forgePath: destDir,
+    };
 
-    int idx = 0;
-    for (final archive in archives) {
-      await extractArchive(archive, destDir, onProgress: (progress) {
-        this.progress = (idx + progress) / archives.length;
+    await extractArchivesToSingleDirectory(
+      extracts,
+      onProgress: (progress) {
+        this.progress = progress;
         installer.updateProgress();
-      });
-
-      idx++;
-      progress = idx / archives.length;
-      installer.updateProgress();
-    }
+      },
+    );
 
     final accountsData = json.decode(
       await File(await getLauncherAccountsPath()).readAsString(),
@@ -369,72 +363,26 @@ class _ExtractVanillaSe extends Procedure {
   _ExtractVanillaSe(super.installer);
 
   @override
-  String get procedureTitle => "BGM/SEを展開しています。";
+  String get procedureTitle => "必要なファイルを展開しています。";
 
   @override
   Future<void> execute() async {
     super.execute();
 
-    final vanillaSePath = path.join(await getTempPath(), "resources.zip");
+    final minecraftDir = getMinecraftDirectoryPath();
+    final extracts = {
+      path.join(await getTempPath(), "resources.zip"): minecraftDir, // vanilla SE
+      installer.bgmPath: minecraftDir, // DQM BGM
+      path.join(await getTempPath(), "fml_libs15.zip"): path.join(minecraftDir, "lib"), // FML libs
+    };
 
-    final archives = [
-      vanillaSePath,
-      installer.bgmPath,
-    ];
-    final destDir = getMinecraftDirectoryPath();
-
-    int idx = 0;
-    for (final archive in archives) {
-      await extractArchive(archive, destDir, onProgress: (progress) {
-        this.progress = (idx + progress) / archives.length;
+    await extractArchivesToSingleDirectory(
+      extracts,
+      onProgress: (progress) {
+        this.progress = progress;
         installer.updateProgress();
-      });
-
-      idx++;
-      progress = idx / archives.length;
-      installer.updateProgress();
-    }
-  }
-}
-
-class _ExtractLibs extends Procedure {
-  _ExtractLibs(super.installer);
-
-  @override
-  String get procedureTitle => "libファイルを展開しています。";
-
-  @override
-  Future<void> execute() async {
-    super.execute();
-    final decoder = ZipDecoder();
-
-    final libStream =
-        InputFileStream(path.join(await getTempPath(), "fml_libs15.zip"));
-
-    var fileCount = 0;
-
-    var files = decoder.decodeStream(libStream).files;
-    for (var file in files) {
-      if (file.isFile) {
-        final outputStream = OutputFileStream(path.join(
-          getMinecraftDirectoryPath(),
-          "lib",
-          file.name,
-        ));
-        file.writeContent(outputStream);
-        await outputStream.close();
-      }
-      fileCount++;
-      progress = fileCount / files.length;
-      installer.updateProgress();
-    }
-    await libStream.close();
-
-    await File(path.join(
-      await getTempPath(),
-      "deobfuscation_data_1.5.2.zip",
-    )).copy(path.join(
-        getMinecraftDirectoryPath(), "lib", "deobfuscation_data_1.5.2.zip"));
+      },
+    );
   }
 }
 

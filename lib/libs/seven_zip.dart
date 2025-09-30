@@ -108,6 +108,22 @@ Future<void> extractArchive(
   );
 }
 
+Future<void> extractArchivesToSingleDirectory(
+  Map<String, String> archives, {
+  ProgressCallback? onProgress,
+}) async {
+  var entries = archives.entries.toList();
+
+  for (var i = 0; i < entries.length; i++) {
+    final archive = entries[i].key;
+    final destination = entries[i].value;
+    await extractArchive(archive, destination, onProgress: (progress) {
+      final overallProgress = (i + progress) / archives.length;
+      onProgress?.call(overallProgress);
+    });
+  }
+}
+
 Future<void> addToArchive(
   String archive,
   String fileOrDirectory, {
