@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:archive/archive_io.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dqm_installer_flt/libs/profiles.dart';
+import 'package:dqm_installer_flt/libs/seven_zip.dart';
 import 'package:dqm_installer_flt/utils/utils.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
@@ -140,6 +141,7 @@ class _DownloadRequiredFiles extends Procedure {
     final assetsToDownload = [
       ...requiredAssets,
       ...installer.additionalMods.map((e) => e.toFiles()).expand((e) => e),
+      getSevenZipDownloadableAsset(),
     ];
 
     var tempPath = await getTempPath();
@@ -265,6 +267,9 @@ class _ExtractFiles extends Procedure {
   @override
   Future<void> execute() async {
     super.execute();
+
+    await setupSevenZip();
+
     final mcJarPath = path.join(
       getMinecraftDirectoryPath(),
       "versions",
@@ -272,37 +277,28 @@ class _ExtractFiles extends Procedure {
       "${installer.versionName}.jar",
     );
 
-    final mcJarStream = InputFileStream(mcJarPath);
-    final preModStream = InputFileStream(installer.prerequisiteModPath);
-    final forgeStream = InputFileStream(installer.forgePath);
-    final files = [
-      ...ZipDecoder().decodeStream(mcJarStream).files,
-      ...ZipDecoder().decodeStream(forgeStream).files,
-      ...ZipDecoder().decodeStream(preModStream).files,
+    final archives = [
+      mcJarPath,
+      installer.prerequisiteModPath,
+      installer.forgePath,
     ];
+    final destDir = path.join(
+      await getTempPath(),
+      "extracted",
+      "jar",
+    );
 
-    var fileCount = 0;
+    int idx = 0;
+    for (final archive in archives) {
+      await extractArchive(archive, destDir, onProgress: (progress) {
+        this.progress = (idx + progress) / archives.length;
+        installer.updateProgress();
+      });
 
-    for (var file in files) {
-      if (file.isFile) {
-        final f = await File(path.join(
-          await getTempPath(),
-          "extracted",
-          "jar",
-          file.name.replaceAll("/", path.separator),
-        )).create(recursive: true);
-
-        final outputStream = OutputFileStream(f.path);
-        file.writeContent(outputStream);
-        await outputStream.close();
-      }
-      fileCount++;
-      progress = fileCount / files.length;
+      idx++;
+      progress = idx / archives.length;
       installer.updateProgress();
     }
-    await mcJarStream.close();
-    await forgeStream.close();
-    await preModStream.close();
 
     final accountsData = json.decode(
       await File(await getLauncherAccountsPath()).readAsString(),
@@ -345,21 +341,24 @@ class _CompressFiles extends Procedure {
       "META-INF",
     )).delete(recursive: true);
 
-    final encoder = ZipFileEncoder();
-    final dir = Directory(path.join(
-      await getTempPath(),
-      "extracted",
-      "jar",
-    ));
-
-    encoder.create(path.join(
-      getMinecraftDirectoryPath(),
-      "versions",
-      installer.versionName,
-      "${installer.versionName}.jar",
-    ));
-    await encoder.addDirectory(dir, includeDirName: false, level: 1);
-    encoder.close();
+    await addToArchive(
+      path.join(
+        getMinecraftDirectoryPath(),
+        "versions",
+        installer.versionName,
+        "${installer.versionName}.jar",
+      ),
+      path.join(
+        await getTempPath(),
+        "extracted",
+        "jar",
+        "*",
+      ),
+      onProgress: (progress) {
+        this.progress = progress;
+        installer.updateProgress();
+      },
+    );
 
     progress = 1;
     installer.updateProgress();
@@ -375,35 +374,26 @@ class _ExtractVanillaSe extends Procedure {
   @override
   Future<void> execute() async {
     super.execute();
-    final decoder = ZipDecoder();
 
-    final vanillaSeStream =
-        InputFileStream(path.join(await getTempPath(), "resources.zip"));
+    final vanillaSePath = path.join(await getTempPath(), "resources.zip");
 
-    final bgmStream = InputFileStream(installer.bgmPath);
-
-    final files = [
-      ...decoder.decodeStream(vanillaSeStream).files,
-      ...decoder.decodeStream(bgmStream).files,
+    final archives = [
+      vanillaSePath,
+      installer.bgmPath,
     ];
+    final destDir = getMinecraftDirectoryPath();
 
-    var fileCount = 0;
+    int idx = 0;
+    for (final archive in archives) {
+      await extractArchive(archive, destDir, onProgress: (progress) {
+        this.progress = (idx + progress) / archives.length;
+        installer.updateProgress();
+      });
 
-    for (var file in files) {
-      if (file.isFile) {
-        final outputStream = OutputFileStream(path.join(
-          getMinecraftDirectoryPath(),
-          file.name,
-        ));
-        file.writeContent(outputStream);
-        await outputStream.close();
-      }
-      fileCount++;
-      progress = fileCount / files.length;
+      idx++;
+      progress = idx / archives.length;
       installer.updateProgress();
     }
-    await vanillaSeStream.close();
-    await bgmStream.close();
   }
 }
 
