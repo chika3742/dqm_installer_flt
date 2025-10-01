@@ -199,7 +199,7 @@ class _CopyRequiredFiles extends Procedure {
     final filesToCopy = {
       path.join(getMinecraftDirectoryPath(), "versions", "1.5.2", "1.5.2.jar"):
           path.join(getMinecraftDirectoryPath(), "versions",
-              installer.versionName, "${installer.versionName}.jar"),
+              installer.versionName, "${installer.versionName}.zip"),
       installer.bodyModPath: path.join(getMinecraftDirectoryPath(), "mods",
           path.basename(installer.bodyModPath)),
     };
@@ -253,6 +253,15 @@ class _CopyRequiredFiles extends Procedure {
     )).writeAsString(
       await rootBundle.loadString("assets/legacy.json"),
     );
+
+    await Directory(path.join(getMinecraftDirectoryPath(), "lib"))
+        .create(recursive: true);
+    // deobfuscation_data_1.5.2.zip
+    await File(path.join(
+      await getTempPath(),
+      "deobfuscation_data_1.5.2.zip",
+    )).copy(path.join(
+        getMinecraftDirectoryPath(), "lib", "deobfuscation_data_1.5.2.zip"));
   }
 }
 
@@ -268,53 +277,26 @@ class _ExtractFiles extends Procedure {
 
     await setupSevenZip();
 
-    final mcJarPath = path.join(
-      getMinecraftDirectoryPath(),
-      "versions",
-      installer.versionName,
-      "${installer.versionName}.jar",
-    );
-
-    final destDir = path.join(
-      await getTempPath(),
-      "extracted",
-      "jar",
-    );
     final extracts = {
-      mcJarPath: destDir,
-      installer.prerequisiteModPath: destDir,
-      installer.forgePath: destDir,
+      installer.prerequisiteModPath: path.join(
+        await getTempPath(),
+        "extracted",
+        "prerequisite",
+      ),
+      installer.forgePath: path.join(
+        await getTempPath(),
+        "extracted",
+        "forge",
+      ),
     };
 
-    await extractArchivesToSingleDirectory(
+    await extractArchives(
       extracts,
       onProgress: (progress) {
         this.progress = progress;
         installer.updateProgress();
       },
     );
-
-    final accountsData = json.decode(
-      await File(await getLauncherAccountsPath()).readAsString(),
-    );
-    final accounts = accountsData["accounts"] as Map<String, dynamic>;
-    final usernames = accounts.values.map((e) => e["minecraftProfile"]["name"]);
-
-    for (var username in usernames) {
-      File(installer.skinPath.isNotEmpty
-              ? installer.skinPath
-              : path.join(
-                  await getTempPath(),
-                  "steve.png",
-                ))
-          .copy(path.join(
-        await getTempPath(),
-        "extracted",
-        "jar",
-        "mob",
-        "$username.png",
-      ));
-    }
   }
 }
 
@@ -328,31 +310,73 @@ class _CompressFiles extends Procedure {
   Future<void> execute() async {
     super.execute();
 
-    await Directory(path.join(
-      await getTempPath(),
-      "extracted",
-      "jar",
-      "META-INF",
-    )).delete(recursive: true);
-
-    await addToArchive(
-      path.join(
-        getMinecraftDirectoryPath(),
-        "versions",
-        installer.versionName,
-        "${installer.versionName}.jar",
-      ),
-      path.join(
-        await getTempPath(),
-        "extracted",
-        "jar",
-        "*",
-      ),
+    var execJarPath = path.join(
+      getMinecraftDirectoryPath(),
+      "versions",
+      installer.versionName,
+      "${installer.versionName}.zip",
+    );
+    await addFilesToArchive(
+      execJarPath,
+      [
+        path.join(
+          await getTempPath(),
+          "extracted",
+          "forge",
+          "*",
+        ),
+        path.join(
+          await getTempPath(),
+          "extracted",
+          "prerequisite",
+          "*",
+        ),
+      ],
       onProgress: (progress) {
         this.progress = progress;
         installer.updateProgress();
       },
     );
+
+    await deleteFromArchive(execJarPath, "META-INF");
+
+    // Add default skins
+    final accountsData = json.decode(
+      await File(await getLauncherAccountsPath()).readAsString(),
+    );
+    final accounts = accountsData["accounts"] as Map<String, dynamic>;
+    final usernames = accounts.values.map((e) => e["minecraftProfile"]["name"]);
+    await Directory(path.join(
+      await getTempPath(),
+      "extracted",
+      "jar",
+      "mob",
+    )).create(recursive: true);
+
+    for (var username in usernames) {
+      File(installer.skinPath.isNotEmpty
+          ? installer.skinPath
+          : path.join(
+        await getTempPath(),
+        "steve.png",
+      ))
+          .copy(path.join(
+        await getTempPath(),
+        "extracted",
+        "jar",
+        "mob",
+        "$username.png",
+      ));
+    }
+    await addToArchive(execJarPath, path.join(
+      await getTempPath(),
+      "extracted",
+      "jar",
+      "*",
+    ));
+
+    // change extension from zip to jar
+    await File(execJarPath).rename(path.setExtension(execJarPath, ".jar"));
 
     progress = 1;
     installer.updateProgress();
@@ -376,7 +400,7 @@ class _ExtractVanillaSe extends Procedure {
       path.join(await getTempPath(), "fml_libs15.zip"): path.join(minecraftDir, "lib"), // FML libs
     };
 
-    await extractArchivesToSingleDirectory(
+    await extractArchives(
       extracts,
       onProgress: (progress) {
         this.progress = progress;

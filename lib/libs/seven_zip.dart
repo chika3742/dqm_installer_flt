@@ -51,14 +51,13 @@ Future<void> runSevenZip(
   String? exePath,
   void Function(String output)? onStdout,
 }) async {
-  exePath ??= "${await getTempPath()}/7z${Platform.isWindows ? ".exe" : ""}";
+  exePath ??= path.join(await getTempPath(), "7z");
   log("Running: $exePath ${args.join(" ")}", level: 1);
   final process = await Process.start(
     exePath,
     args,
     workingDirectory: workingDirectory,
   );
-
 
   await Future.wait([
     process.stdout.listen((event) {
@@ -108,7 +107,7 @@ Future<void> extractArchive(
   );
 }
 
-Future<void> extractArchivesToSingleDirectory(
+Future<void> extractArchives(
   Map<String, String> archives, {
   ProgressCallback? onProgress,
 }) async {
@@ -136,5 +135,26 @@ Future<void> addToArchive(
       onProgress?.call(progress);
     },
     workingDirectory: workingDirectory,
+  );
+}
+
+Future<void> addFilesToArchive(
+  String archive,
+  List<String> targets, {
+  ProgressCallback? onProgress,
+  String? workingDirectory,
+}) async {
+  for (var i = 0; i < targets.length; i++) {
+    final target = targets[i];
+    await addToArchive(archive, target, onProgress: (progress) {
+      final overallProgress = (i + progress) / targets.length;
+      onProgress?.call(overallProgress);
+    });
+  }
+}
+
+Future<void> deleteFromArchive(String archive, String path) {
+  return runSevenZip(
+    ["d", archive, path],
   );
 }
