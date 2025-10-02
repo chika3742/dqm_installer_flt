@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:archive/archive_io.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dqm_installer_flt/libs/profiles.dart';
+import 'package:dqm_installer_flt/libs/seven_zip.dart';
 import 'package:dqm_installer_flt/utils/utils.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
@@ -58,7 +58,6 @@ class Installer {
       _ExtractFiles(this),
       _CompressFiles(this),
       _ExtractVanillaSe(this),
-      _ExtractLibs(this),
       _CreateDqmProfile(this),
       _Cleanup(this),
     ];
@@ -140,6 +139,7 @@ class _DownloadRequiredFiles extends Procedure {
     final assetsToDownload = [
       ...requiredAssets,
       ...installer.additionalMods.map((e) => e.toFiles()).expand((e) => e),
+      getSevenZipDownloadableAsset(),
     ];
 
     var tempPath = await getTempPath();
@@ -199,7 +199,7 @@ class _CopyRequiredFiles extends Procedure {
     final filesToCopy = {
       path.join(getMinecraftDirectoryPath(), "versions", "1.5.2", "1.5.2.jar"):
           path.join(getMinecraftDirectoryPath(), "versions",
-              installer.versionName, "${installer.versionName}.jar"),
+              installer.versionName, "${installer.versionName}.zip"),
       installer.bodyModPath: path.join(getMinecraftDirectoryPath(), "mods",
           path.basename(installer.bodyModPath)),
     };
@@ -253,6 +253,15 @@ class _CopyRequiredFiles extends Procedure {
     )).writeAsString(
       await rootBundle.loadString("assets/legacy.json"),
     );
+
+    await Directory(path.join(getMinecraftDirectoryPath(), "lib"))
+        .create(recursive: true);
+    // deobfuscation_data_1.5.2.zip
+    await File(path.join(
+      await getTempPath(),
+      "deobfuscation_data_1.5.2.zip",
+    )).copy(path.join(
+        getMinecraftDirectoryPath(), "lib", "deobfuscation_data_1.5.2.zip"));
   }
 }
 
@@ -265,66 +274,29 @@ class _ExtractFiles extends Procedure {
   @override
   Future<void> execute() async {
     super.execute();
-    final mcJarPath = path.join(
-      getMinecraftDirectoryPath(),
-      "versions",
-      installer.versionName,
-      "${installer.versionName}.jar",
-    );
 
-    final mcJarStream = InputFileStream(mcJarPath);
-    final preModStream = InputFileStream(installer.prerequisiteModPath);
-    final forgeStream = InputFileStream(installer.forgePath);
-    final files = [
-      ...ZipDecoder().decodeStream(mcJarStream).files,
-      ...ZipDecoder().decodeStream(forgeStream).files,
-      ...ZipDecoder().decodeStream(preModStream).files,
-    ];
+    await setupSevenZip();
 
-    var fileCount = 0;
-
-    for (var file in files) {
-      if (file.isFile) {
-        final f = await File(path.join(
-          await getTempPath(),
-          "extracted",
-          "jar",
-          file.name.replaceAll("/", path.separator),
-        )).create(recursive: true);
-
-        final outputStream = OutputFileStream(f.path);
-        file.writeContent(outputStream);
-        await outputStream.close();
-      }
-      fileCount++;
-      progress = fileCount / files.length;
-      installer.updateProgress();
-    }
-    await mcJarStream.close();
-    await forgeStream.close();
-    await preModStream.close();
-
-    final accountsData = json.decode(
-      await File(await getLauncherAccountsPath()).readAsString(),
-    );
-    final accounts = accountsData["accounts"] as Map<String, dynamic>;
-    final usernames = accounts.values.map((e) => e["minecraftProfile"]["name"]);
-
-    for (var username in usernames) {
-      File(installer.skinPath.isNotEmpty
-              ? installer.skinPath
-              : path.join(
-                  await getTempPath(),
-                  "steve.png",
-                ))
-          .copy(path.join(
+    final extracts = {
+      installer.prerequisiteModPath: path.join(
         await getTempPath(),
         "extracted",
-        "jar",
-        "mob",
-        "$username.png",
-      ));
-    }
+        "prerequisite",
+      ),
+      installer.forgePath: path.join(
+        await getTempPath(),
+        "extracted",
+        "forge",
+      ),
+    };
+
+    await extractArchives(
+      extracts,
+      onProgress: (progress) {
+        this.progress = progress;
+        installer.updateProgress();
+      },
+    );
   }
 }
 
@@ -338,28 +310,73 @@ class _CompressFiles extends Procedure {
   Future<void> execute() async {
     super.execute();
 
+    var execJarPath = path.join(
+      getMinecraftDirectoryPath(),
+      "versions",
+      installer.versionName,
+      "${installer.versionName}.zip",
+    );
+    await addFilesToArchive(
+      execJarPath,
+      [
+        path.join(
+          await getTempPath(),
+          "extracted",
+          "forge",
+          "*",
+        ),
+        path.join(
+          await getTempPath(),
+          "extracted",
+          "prerequisite",
+          "*",
+        ),
+      ],
+      onProgress: (progress) {
+        this.progress = progress;
+        installer.updateProgress();
+      },
+    );
+
+    await deleteFromArchive(execJarPath, "META-INF");
+
+    // Add default skins
+    final accountsData = json.decode(
+      await File(await getLauncherAccountsPath()).readAsString(),
+    );
+    final accounts = accountsData["accounts"] as Map<String, dynamic>;
+    final usernames = accounts.values.map((e) => e["minecraftProfile"]["name"]);
     await Directory(path.join(
       await getTempPath(),
       "extracted",
       "jar",
-      "META-INF",
-    )).delete(recursive: true);
+      "mob",
+    )).create(recursive: true);
 
-    final encoder = ZipFileEncoder();
-    final dir = Directory(path.join(
+    for (var username in usernames) {
+      File(installer.skinPath.isNotEmpty
+          ? installer.skinPath
+          : path.join(
+        await getTempPath(),
+        "steve.png",
+      ))
+          .copy(path.join(
+        await getTempPath(),
+        "extracted",
+        "jar",
+        "mob",
+        "$username.png",
+      ));
+    }
+    await addToArchive(execJarPath, path.join(
       await getTempPath(),
       "extracted",
       "jar",
+      "*",
     ));
 
-    encoder.create(path.join(
-      getMinecraftDirectoryPath(),
-      "versions",
-      installer.versionName,
-      "${installer.versionName}.jar",
-    ));
-    await encoder.addDirectory(dir, includeDirName: false, level: 1);
-    encoder.close();
+    // change extension from zip to jar
+    await File(execJarPath).rename(path.setExtension(execJarPath, ".jar"));
 
     progress = 1;
     installer.updateProgress();
@@ -370,81 +387,26 @@ class _ExtractVanillaSe extends Procedure {
   _ExtractVanillaSe(super.installer);
 
   @override
-  String get procedureTitle => "BGM/SEを展開しています。";
+  String get procedureTitle => "必要なファイルを展開しています。";
 
   @override
   Future<void> execute() async {
     super.execute();
-    final decoder = ZipDecoder();
 
-    final vanillaSeStream =
-        InputFileStream(path.join(await getTempPath(), "resources.zip"));
+    final minecraftDir = getMinecraftDirectoryPath();
+    final extracts = {
+      path.join(await getTempPath(), "resources.zip"): minecraftDir, // vanilla SE
+      installer.bgmPath: minecraftDir, // DQM BGM
+      path.join(await getTempPath(), "fml_libs15.zip"): path.join(minecraftDir, "lib"), // FML libs
+    };
 
-    final bgmStream = InputFileStream(installer.bgmPath);
-
-    final files = [
-      ...decoder.decodeStream(vanillaSeStream).files,
-      ...decoder.decodeStream(bgmStream).files,
-    ];
-
-    var fileCount = 0;
-
-    for (var file in files) {
-      if (file.isFile) {
-        final outputStream = OutputFileStream(path.join(
-          getMinecraftDirectoryPath(),
-          file.name,
-        ));
-        file.writeContent(outputStream);
-        await outputStream.close();
-      }
-      fileCount++;
-      progress = fileCount / files.length;
-      installer.updateProgress();
-    }
-    await vanillaSeStream.close();
-    await bgmStream.close();
-  }
-}
-
-class _ExtractLibs extends Procedure {
-  _ExtractLibs(super.installer);
-
-  @override
-  String get procedureTitle => "libファイルを展開しています。";
-
-  @override
-  Future<void> execute() async {
-    super.execute();
-    final decoder = ZipDecoder();
-
-    final libStream =
-        InputFileStream(path.join(await getTempPath(), "fml_libs15.zip"));
-
-    var fileCount = 0;
-
-    var files = decoder.decodeStream(libStream).files;
-    for (var file in files) {
-      if (file.isFile) {
-        final outputStream = OutputFileStream(path.join(
-          getMinecraftDirectoryPath(),
-          "lib",
-          file.name,
-        ));
-        file.writeContent(outputStream);
-        await outputStream.close();
-      }
-      fileCount++;
-      progress = fileCount / files.length;
-      installer.updateProgress();
-    }
-    await libStream.close();
-
-    await File(path.join(
-      await getTempPath(),
-      "deobfuscation_data_1.5.2.zip",
-    )).copy(path.join(
-        getMinecraftDirectoryPath(), "lib", "deobfuscation_data_1.5.2.zip"));
+    await extractArchives(
+      extracts,
+      onProgress: (progress) {
+        this.progress = progress;
+        installer.updateProgress();
+      },
+    );
   }
 }
 
