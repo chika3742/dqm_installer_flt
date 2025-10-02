@@ -27,8 +27,7 @@ final List<DownloadableAsset> requiredAssets = [
 final List<AdditionalMod> additionalMods = [
   AdditionalMod(
     "Skin Fixer",
-    "ランチャーでアップロードしたスキンをゲーム内に反映させます。"
-        "これを導入しなかった場合には、上で指定したスキンが使用されます。"
+    "ランチャーでアップロードしたスキンをゲーム内に反映させます（※DQMVでは動作しません。上のフィールドにスキンの画像ファイルを設定してください。）。"
         "スリムスキンは腕に黒帯が発生します。",
     mod: DownloadableAsset(
       url: Uri.parse("https://mediafilez.forgecdn.net/files/2571/89/skin-fixer-1.5.2-1.0.1.jar"),
