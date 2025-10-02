@@ -36,13 +36,16 @@ DownloadableAsset getSevenZipDownloadableAsset() {
 
 Future<void> setupSevenZip() async {
   var tempPath = await getTempPath();
-  return await extractFileToDisk(
+  await extractFileToDisk(
     path.join(
       tempPath,
       getSevenZipDownloadableAsset().url.pathSegments.last,
     ),
     tempPath,
   );
+  if (Platform.isMacOS || Platform.isLinux) {
+    await Process.run("chmod", ["u+x", path.join(await getTempPath(), "7z")]);
+  }
 }
 
 Future<void> runSevenZip(
