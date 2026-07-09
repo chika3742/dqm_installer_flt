@@ -2,49 +2,47 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
-import 'package:dqm_installer_flt/libs/installer.dart';
 import 'package:dqm_installer_flt/utils/utils.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as path;
 
 typedef ProgressCallback = void Function(double progress);
 
-DownloadableAsset getSevenZipDownloadableAsset() {
+/// Returns the file name of the bundled 7-Zip archive for the current platform.
+///
+/// The archive is shipped inside the app bundle (see `assets/7z/` in
+/// pubspec.yaml).
+String getSevenZipAssetName() {
   if (Platform.isWindows) {
-    return DownloadableAsset(
-      url: Uri.parse("https://r2.chikach.net/dqm-assets/7z_windows.zip"),
-      size: 623004,
-      md5: "97dd07c0b259ecc0dd6e88bc5ff477b4",
-    );
+    return "7z_windows.zip";
   }
   if (Platform.isMacOS) {
-    return DownloadableAsset(
-      url: Uri.parse("https://r2.chikach.net/dqm-assets/7z_mac.zip"),
-      size: 2629603,
-      md5: "d3eb38d8ae19398fd2b5fffb704ac418",
-    );
+    return "7z_mac.zip";
   }
   if (Platform.isLinux) {
-    return DownloadableAsset(
-      url: Uri.parse("https://r2.chikach.net/dqm-assets/7z_linux.zip"),
-      size: 1693456,
-      md5: "aad773c3dde60811c8c873831cef0bca",
-    );
+    return "7z_linux.zip";
   }
 
   throw UnsupportedError("Unsupported platform");
 }
 
 Future<void> setupSevenZip() async {
-  var tempPath = await getTempPath();
-  await extractFileToDisk(
-    path.join(
-      tempPath,
-      getSevenZipDownloadableAsset().url.pathSegments.last,
-    ),
-    tempPath,
+  final tempPath = await getTempPath();
+  final assetName = getSevenZipAssetName();
+  final zipPath = path.join(tempPath, assetName);
+
+  // Copy the bundled 7-Zip archive out of the app bundle into the temp
+  // directory, then reuse the existing extract/chmod pipeline.
+  final data = await rootBundle.load("assets/7z/$assetName");
+  final file = await File(zipPath).create(recursive: true);
+  await file.writeAsBytes(
+    data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+    flush: true,
   );
+
+  await extractFileToDisk(zipPath, tempPath);
   if (Platform.isMacOS || Platform.isLinux) {
-    await Process.run("chmod", ["u+x", path.join(await getTempPath(), "7z")]);
+    await Process.run("chmod", ["u+x", path.join(tempPath, "7z")]);
   }
 }
 

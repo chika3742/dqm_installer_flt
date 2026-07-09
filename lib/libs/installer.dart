@@ -139,7 +139,6 @@ class _DownloadRequiredFiles extends Procedure {
     final assetsToDownload = [
       ...requiredAssets,
       ...installer.additionalMods.map((e) => e.toFiles()).expand((e) => e),
-      getSevenZipDownloadableAsset(),
     ];
 
     var tempPath = await getTempPath();

@@ -58,6 +58,12 @@ flutter:
 
   assets:
     - assets/
+    - path: assets/7z/7z_windows.zip
+      platforms: [windows]
+    - path: assets/7z/7z_mac.zip
+      platforms: [macos]
+    - path: assets/7z/7z_linux.zip
+      platforms: [linux]
 
 
   fonts:
