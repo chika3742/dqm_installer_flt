@@ -11,7 +11,7 @@ jobs:
   build_windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install FVM
         run: choco install fvm
@@ -51,15 +51,10 @@ jobs:
   build_macos:
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install FVM
-        run: |
-          brew tap leoafarias/fvm
-          brew install fvm
+      - uses: actions/checkout@v7
 
       - name: Install Flutter SDK
-        run: fvm install
+        uses: chika3742/setup-fvm@v3
 
       - name: Import Apple provisioning profile
         run: |
@@ -97,13 +92,10 @@ jobs:
   build_linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install FVM
-        run: curl -fsSL https://fvm.app/install.sh | bash
+      - uses: actions/checkout@v7
 
       - name: Install Flutter SDK
-        run: fvm install
+        uses: chika3742/setup-fvm@v3
 
       - name: Install apt dependencies
         run: |
