@@ -59,7 +59,7 @@ jobs:
           BUILD_NAME: ${{ needs.prepare.outputs.build-name }}
 
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           files: ${{ steps.compress.outputs.FILENAME }}
@@ -153,7 +153,7 @@ jobs:
           BUILD_NAME: ${{ needs.prepare.outputs.build-name }}
 
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           files: build/linux/x64/release/dqm_installer_flt_*.zip
