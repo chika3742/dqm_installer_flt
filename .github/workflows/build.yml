@@ -77,6 +77,7 @@ jobs:
         run: fvm flutter pub get
 
       - name: Init Provisioning Profile and Certificate
+        working-directory: macos
         run: bundle exec fastlane match --readonly
 
       - name: Build (Archive) for macOS
@@ -92,6 +93,7 @@ jobs:
           BUILD_NAME=${{ needs.prepare.outputs.build-name }}
 
       - name: Notarize
+        working-directory: macos
         run: bundle exec fastlane notarize
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
