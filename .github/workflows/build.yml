@@ -107,10 +107,10 @@ jobs:
           APP_VERSION: ${{ needs.prepare.outputs.build-name }}
 
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
-          files: build/macos/notarized/*.dmg
+          files: build/macos/Build/Products/Release/*.dmg
 
   build_linux:
     runs-on: ubuntu-latest
