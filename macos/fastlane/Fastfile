@@ -1,0 +1,25 @@
+default_platform(:mac)
+
+platform :mac do
+  desc "Download and install provisioning profile and certificate with Match"
+  lane :setup do
+    setup_ci
+
+    match(readonly: true)
+  end
+
+  desc "Notarize .dmg disk image"
+  lane :notarize_dmg do
+    app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_content: ENV["ASC_KEY_CONTENT"],
+    )
+
+    notarize(
+      package: "../build/macos/Build/Products/Release/dqm_installer_flt_#{ENV["APP_VERSION"]}_macos.dmg",
+      bundle_id: CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier),
+      print_log: true
+    )
+  end
+end

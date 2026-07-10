@@ -7,11 +7,26 @@ on:
 permissions:
   contents: write
 
+env:
+  BUILD_NUMBER_OFFSET: 0
+
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      build-name: ${{ steps.v.outputs.name }}
+      build-number: ${{ steps.bn.outputs.number }}
+    steps:
+      - id: v
+        run: echo "name=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+      - id: bn
+        run: echo "number=$(( ${{ github.run_number }} + ${{ env.BUILD_NUMBER_OFFSET }} ))" >> "$GITHUB_OUTPUT"
+
   build_windows:
     runs-on: windows-latest
+    needs: prepare
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install FVM
         run: choco install fvm
@@ -23,17 +38,16 @@ jobs:
         run: fvm flutter pub get
 
       - name: Build for Windows
-        run: fvm flutter build windows
-
-      - name: Install yq
-        run: Invoke-WebRequest -URI "https://github.com/mikefarah/yq/releases/download/v4.34.1/yq_windows_amd64.exe" -OutFile yq.exe
+        run: fvm flutter build windows --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER
+        env:
+          BUILD_NAME: ${{ needs.prepare.outputs.build-name }}
+          BUILD_NUMBER: ${{ needs.prepare.outputs.build-number }}
 
       - name: Compress archive
         id: compress
         shell: pwsh
         run: |
-          $VERSION=$(.\yq.exe -r ".version" pubspec.yaml | % { $_ -replace '\+.+', '' })
-          $FILENAME="dqm_installer_flt_${VERSION}_windows.zip"
+          $FILENAME="dqm_installer_flt_${BUILD_NAME}_windows.zip"
           echo "FILENAME=$FILENAME" >> "${env:GITHUB_OUTPUT}"
           
           # Copy Visual C++ runtime libraries
@@ -41,69 +55,78 @@ jobs:
           cd build\windows\x64\runner
           Move-Item -Path Release -Destination dqm_installer_flt
           Compress-Archive -DestinationPath ..\..\..\..\$FILENAME -Path dqm_installer_flt
+        env:
+          BUILD_NAME: ${{ needs.prepare.outputs.build-name }}
 
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           files: ${{ steps.compress.outputs.FILENAME }}
 
   build_macos:
     runs-on: macos-26
+    needs: prepare
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install FVM
-        run: |
-          brew tap leoafarias/fvm
-          brew install fvm
+      - uses: actions/checkout@v7
 
       - name: Install Flutter SDK
-        run: fvm install
-
-      - name: Import Apple provisioning profile
-        run: |
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo -n "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 -d > ~/Library/MobileDevice/Provisioning\ Profiles/DQM_Installer_FLT.provisionprofile
-
-      - name: Import code-signing certificate
-        uses: Apple-Actions/import-codesign-certs@v2
-        with:
-          p12-file-base64: ${{ secrets.CERT_P12_BASE64 }}
-          p12-password: ${{ secrets.CERT_P12_PASS }}
-
-      - name: Import App Store Connect keychain
-        run: |
-          echo -n "${{ secrets.APP_STORE_CONNECT_KEY }}" > AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
-          xcrun notarytool store-credentials "App Store Connect Profile" \
-            --key AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8 \
-            --key-id ${{ secrets.APP_STORE_CONNECT_KEY_ID }} \
-            --issuer ${{ secrets.APP_STORE_CONNECT_KEY_ISSUER }}
+        uses: chika3742/setup-fvm@v3
 
       - name: Install dependencies
-        run: fvm flutter pub get
+        run: |
+          fvm flutter pub get
+          (cd macos && bundle install)
+
+      - name: Init Provisioning Profile and Certificate
+        working-directory: macos
+        run: bundle exec fastlane setup
+        env:
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GITHUB_KEY }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSPHRASE }}
 
       - name: Build (Archive) for macOS
         run: |
-          fvm flutter build macos --config-only
-          xcodebuild -workspace ./macos/Runner.xcworkspace -scheme Runner archive
+          archive_path=./build/macos/Runner.xcarchive
+          
+          fvm flutter build macos --config-only --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER
+          xcodebuild -project ./macos/Runner.xcodeproj -scheme Runner archive \
+            -archivePath $archive_path
+          xcodebuild -exportArchive -archivePath $archive_path \
+            -exportOptionsPlist ./macos/ExportOptions.plist \
+            -exportPath ./build/macos/Build/Products/Release/
+        env:
+          BUILD_NAME: ${{ needs.prepare.outputs.build-name }}
+          BUILD_NUMBER: ${{ needs.prepare.outputs.build-number }}
+
+      - name: Create DMG image
+        run: ./macos/scripts/create_dmg_image.sh $BUILD_NAME
+        env:
+          BUILD_NAME: ${{ needs.prepare.outputs.build-name }}
+
+      - name: Notarize
+        working-directory: macos
+        run: bundle exec fastlane notarize_dmg
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ISSUER }}
+          ASC_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_KEY }}
+          APP_VERSION: ${{ needs.prepare.outputs.build-name }}
 
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
-          files: build/macos/notarized/*.dmg
+          files: build/macos/Build/Products/Release/*.dmg
 
   build_linux:
     runs-on: ubuntu-latest
+    needs: prepare
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install FVM
-        run: curl -fsSL https://fvm.app/install.sh | bash
+      - uses: actions/checkout@v7
 
       - name: Install Flutter SDK
-        run: fvm install
+        uses: chika3742/setup-fvm@v3
 
       - name: Install apt dependencies
         run: |
@@ -116,17 +139,21 @@ jobs:
         run: fvm flutter pub get
 
       - name: Build for Linux
-        run: fvm flutter build linux
+        run: fvm flutter build linux --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER
+        env:
+          BUILD_NAME: ${{ needs.prepare.outputs.build-name }}
+          BUILD_NUMBER: ${{ needs.prepare.outputs.build-number }}
 
-      - run: |
-          VERSION=$(./yq -r ".version" pubspec.yaml | sed -E 's/\+.*//')
-          
+      - name: Package
+        run: |
           cd build/linux/x64/release
           mv bundle dqm_installer_flt
-          zip -r dqm_installer_flt_${VERSION}_linux.zip ./dqm_installer_flt
+          zip -r dqm_installer_flt_${BUILD_NAME}_linux.zip ./dqm_installer_flt
+        env:
+          BUILD_NAME: ${{ needs.prepare.outputs.build-name }}
 
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           files: build/linux/x64/release/dqm_installer_flt_*.zip

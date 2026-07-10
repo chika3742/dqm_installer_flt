@@ -1,0 +1,6 @@
+git_url("https://github.com/chika3742/ios-secrets.git")
+
+storage_mode("git")
+platform("macos")
+
+type("developer_id") # The default type, can be: appstore, adhoc, enterprise or development
