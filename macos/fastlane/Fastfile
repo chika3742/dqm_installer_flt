@@ -1,6 +1,13 @@
 default_platform(:macos)
 
 platform :macos do
+  desc "Download and install provisioning profile and certificate with Match"
+  lane :setup do
+    setup_ci
+
+    match(readonly: true)
+  end
+
   desc "Notarize .dmg disk image"
   lane :notarize do
     app_store_connect_api_key(
