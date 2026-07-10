@@ -17,7 +17,8 @@ platform :mac do
     )
 
     notarize(
-      package: "../build/macos/Build/Products/Release/dqm_installer_flt_#{ENV["APP_VERSION"]}_macos.dmg"
+      package: "../build/macos/Build/Products/Release/dqm_installer_flt_#{ENV["APP_VERSION"]}_macos.dmg",
+      bundle_id: CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier),
     )
   end
 end
