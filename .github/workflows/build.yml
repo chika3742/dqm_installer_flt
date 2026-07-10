@@ -35,7 +35,9 @@ jobs:
         run: fvm install
 
       - name: Install dependencies
-        run: fvm flutter pub get
+        run: |
+          fvm flutter pub get
+          (cd macos && bundle install)
 
       - name: Build for Windows
         run: fvm flutter build windows --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER
