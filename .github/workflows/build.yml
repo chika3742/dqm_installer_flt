@@ -83,6 +83,7 @@ jobs:
         run: bundle exec fastlane setup
         env:
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GITHUB_KEY }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSPHRASE }}
 
       - name: Build (Archive) for macOS
         run: |
