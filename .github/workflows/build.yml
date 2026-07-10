@@ -40,8 +40,8 @@ jobs:
       - name: Build for Windows
         run: fvm flutter build windows --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER
         env:
-          BUILD_NAME=${{ needs.prepare.outputs.build-name }}
-          BUILD_NUMBER=${{ needs.prepare.outputs.build-number }}
+          BUILD_NAME: ${{ needs.prepare.outputs.build-name }}
+          BUILD_NUMBER: ${{ needs.prepare.outputs.build-number }}
 
       - name: Compress archive
         id: compress
@@ -56,7 +56,7 @@ jobs:
           Move-Item -Path Release -Destination dqm_installer_flt
           Compress-Archive -DestinationPath ..\..\..\..\$FILENAME -Path dqm_installer_flt
         env:
-          BUILD_NAME=${{ needs.prepare.outputs.build-name }}
+          BUILD_NAME: ${{ needs.prepare.outputs.build-name }}
 
       - name: Release
         uses: softprops/action-gh-release@v2
@@ -84,13 +84,13 @@ jobs:
         run: |
           fvm flutter build macos --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER
         env:
-          BUILD_NAME=${{ needs.prepare.outputs.build-name }}
-          BUILD_NUMBER=${{ needs.prepare.outputs.build-number }}
+          BUILD_NAME: ${{ needs.prepare.outputs.build-name }}
+          BUILD_NUMBER: ${{ needs.prepare.outputs.build-number }}
 
       - name: Create DMG image
         run: ./macos/scripts/create_dmg_image.sh $BUILD_NAME
         env:
-          BUILD_NAME=${{ needs.prepare.outputs.build-name }}
+          BUILD_NAME: ${{ needs.prepare.outputs.build-name }}
 
       - name: Notarize
         working-directory: macos
@@ -129,8 +129,8 @@ jobs:
       - name: Build for Linux
         run: fvm flutter build linux --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER
         env:
-          BUILD_NAME=${{ needs.prepare.outputs.build-name }}
-          BUILD_NUMBER=${{ needs.prepare.outputs.build-number }}
+          BUILD_NAME: ${{ needs.prepare.outputs.build-name }}
+          BUILD_NUMBER: ${{ needs.prepare.outputs.build-number }}
 
       - name: Package
         run: |
@@ -138,7 +138,7 @@ jobs:
           mv bundle dqm_installer_flt
           zip -r dqm_installer_flt_${BUILD_NAME}_linux.zip ./dqm_installer_flt
         env:
-          BUILD_NAME=${{ needs.prepare.outputs.build-name }}
+          BUILD_NAME: ${{ needs.prepare.outputs.build-name }}
 
       - name: Release
         uses: softprops/action-gh-release@v2
