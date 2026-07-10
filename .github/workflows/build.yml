@@ -82,7 +82,7 @@ jobs:
         working-directory: macos
         run: bundle exec fastlane setup
         env:
-          MATCH_GIT_BASIC_AUTH: ${{ secrets.MATCH_GITHUB_KEY }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GITHUB_KEY }}
 
       - name: Build (Archive) for macOS
         run: |
@@ -98,7 +98,7 @@ jobs:
 
       - name: Notarize
         working-directory: macos
-        run: bundle exec fastlane notarize
+        run: bundle exec fastlane notarize_dmg
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ISSUER }}

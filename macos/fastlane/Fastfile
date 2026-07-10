@@ -9,7 +9,7 @@ platform :macos do
   end
 
   desc "Notarize .dmg disk image"
-  lane :notarize do
+  lane :notarize_dmg do
     app_store_connect_api_key(
       key_id: ENV["ASC_KEY_ID"],
       issuer_id: ENV["ASC_ISSUER_ID"],
