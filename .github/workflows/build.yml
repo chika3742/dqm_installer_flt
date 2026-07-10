@@ -81,6 +81,8 @@ jobs:
       - name: Init Provisioning Profile and Certificate
         working-directory: macos
         run: bundle exec fastlane match --readonly
+        env:
+          MATCH_GIT_BASIC_AUTH: ${{ secrets.MATCH_GITHUB_KEY }}
 
       - name: Build (Archive) for macOS
         run: |
