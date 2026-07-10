@@ -87,7 +87,14 @@ jobs:
 
       - name: Build (Archive) for macOS
         run: |
-          fvm flutter build macos --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER
+          archive_path=./build/macos/Runner.xcarchive
+          
+          fvm flutter build macos --config-only --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER
+          xcodebuild -project ./macos/Runner.xcodeproj -scheme Runner archive \
+            -archivePath $archive_path
+          xcodebuild -exportArchive -archivePath $archive_path \
+            -exportOptionsPlist ./macos/ExportOptions.plist \
+            -exportPath ./build/macos/Build/Products/Release/
         env:
           BUILD_NAME: ${{ needs.prepare.outputs.build-name }}
           BUILD_NUMBER: ${{ needs.prepare.outputs.build-number }}
