@@ -1,0 +1,16 @@
+default_platform(:macos)
+
+platform :macos do
+  desc "Notarize .dmg disk image"
+  lane :notarize do
+    app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_content: ENV["ASC_KEY_CONTENT"],
+    )
+
+    notarize(
+      package: "../build/macos/Build/Products/Release/dqm_installer_flt_#{ENV["APP_VERSION"]}_macos.dmg"
+    )
+  end
+end
