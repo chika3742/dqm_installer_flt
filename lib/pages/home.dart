@@ -587,6 +587,7 @@ class _ModCheckboxListState extends State<_ModCheckboxList> {
   @override
   Widget build(BuildContext context) {
     return Column(
+      spacing: 16,
       children: additionalMods.map((e) => _buildCheckbox(e)).toList(),
     );
   }
@@ -604,28 +605,30 @@ class _ModCheckboxListState extends State<_ModCheckboxList> {
 
     return GestureDetector(
       onTap: toggle,
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Checkbox(
-                value: widget.selected.contains(mod),
-                onChanged: (value) {
-                  toggle();
-                },
-              ),
-              Text(
-                mod.title,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            ],
+          Checkbox(
+            value: widget.selected.contains(mod),
+            onChanged: (value) {
+              toggle();
+            },
           ),
-          Padding(
-            padding: const EdgeInsets.only(left: 32.0, bottom: 16.0),
-            child: Text(mod.description),
-          ),
+          Expanded(
+            child: Column(
+              spacing: 8,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(height: 1),
+                Text(
+                  mod.title,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                Text(mod.description),
+                Text("作者: ${mod.author}"),
+              ],
+            ),
+          )
         ],
       ),
     );

@@ -1,14 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
-import 'package:crypto/crypto.dart';
 import 'package:dqm_installer_flt/libs/profiles.dart';
 import 'package:dqm_installer_flt/libs/seven_zip.dart';
 import 'package:dqm_installer_flt/utils/utils.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 
 import '../data.dart';
@@ -53,7 +50,6 @@ class Installer {
     required this.additionalMods,
   }) {
     procedure = [
-      _DownloadRequiredFiles(this),
       _CopyRequiredFiles(this),
       _ExtractFiles(this),
       _CompressFiles(this),
@@ -126,64 +122,7 @@ abstract class Procedure {
   }
 }
 
-class _DownloadRequiredFiles extends Procedure {
-  _DownloadRequiredFiles(super.installer);
-
-  @override
-  String get procedureTitle => "必要なファイルをダウンロードしています";
-
-  @override
-  Future<void> execute() async {
-    super.execute();
-
-    final assetsToDownload = [
-      ...requiredAssets,
-      ...installer.additionalMods.map((e) => e.toFiles()).expand((e) => e),
-    ];
-
-    var tempPath = await getTempPath();
-    final totalBytes =
-        assetsToDownload.fold(0, (value, element) => value + element.size);
-    var bytesDownloaded = 0;
-
-    for (var i = 0; i < assetsToDownload.length; i++) {
-      final asset = assetsToDownload[i];
-
-      // local file sink
-      final file = await File(path.join(
-        tempPath,
-        path.basename(Uri.decodeComponent(asset.url.path)),
-      )).create(recursive: true);
-      final fileSink = file.openWrite();
-
-      // http client for downloading
-      final client = http.Client();
-      final response = await client.send(http.Request("GET", asset.url));
-
-      final completer = Completer();
-      response.stream.listen((value) {
-        fileSink.add(value);
-
-        // update progress
-        bytesDownloaded += value.length;
-        progress = bytesDownloaded / totalBytes;
-        installer.updateProgress();
-      }).onDone(() {
-        fileSink.close();
-        completer.complete();
-      });
-      await completer.future;
-
-      // compute file checksum
-      final checksum = await file.openRead().transform(md5).first;
-      if (checksum.toString().toUpperCase() != asset.md5.toUpperCase()) {
-        log("Checksum mismatch! (${checksum.toString().toUpperCase()} vs ${asset.md5.toUpperCase()})");
-        throw DqmInstallationException(
-            DqmInstallationError.failedToDownloadAsset);
-      }
-    }
-  }
-}
+typedef FileToCopy = ({ String from, String to, bool isAsset });
 
 class _CopyRequiredFiles extends Procedure {
   _CopyRequiredFiles(super.installer);
@@ -195,40 +134,50 @@ class _CopyRequiredFiles extends Procedure {
   Future<void> execute() async {
     super.execute();
 
-    final filesToCopy = {
-      path.join(getMinecraftDirectoryPath(), "versions", "1.5.2", "1.5.2.jar"):
-          path.join(getMinecraftDirectoryPath(), "versions",
-              installer.versionName, "${installer.versionName}.zip"),
-      installer.bodyModPath: path.join(getMinecraftDirectoryPath(), "mods",
-          path.basename(installer.bodyModPath)),
-    };
+    final List<FileToCopy> filesToCopy = [
+      (
+        from: path.join(getMinecraftDirectoryPath(), "versions", "1.5.2", "1.5.2.jar"),
+        to: path.join(getMinecraftDirectoryPath(), "versions",
+            installer.versionName, "${installer.versionName}.zip"),
+        isAsset: false,
+      ),
+      (
+        from: installer.bodyModPath,
+        to: path.join(getMinecraftDirectoryPath(), "mods",
+            path.basename(installer.bodyModPath)),
+        isAsset: false,
+      ),
+    ];
 
     // add mod files
     for (var e in installer.additionalMods) {
-      var modFileName = path.basename(Uri.decodeComponent(e.mod.url.path));
-      filesToCopy[path.join(await getTempPath(), modFileName)] = path.join(
-        getMinecraftDirectoryPath(),
-        "mods",
-        modFileName,
-      );
+      var modFileName = path.basename(e.mod);
+      filesToCopy.add((
+        from: e.mod,
+        to: path.join(getMinecraftDirectoryPath(), "mods", modFileName),
+        isAsset: true,
+      ));
 
-      if (e.coreMod != null) {
-        final coreModFileName =
-            path.basename(Uri.decodeComponent(e.coreMod!.url.path));
-        filesToCopy[path.join(await getTempPath(), coreModFileName)] =
-            path.join(
-          getMinecraftDirectoryPath(),
-          "coremods",
-          coreModFileName,
-        );
+      if (e.coreMod case final coreMod?) {
+        final coreModFileName = path.basename(coreMod);
+        filesToCopy.add((
+          from: coreMod,
+          to: path.join(getMinecraftDirectoryPath(), "coremods", coreModFileName),
+          isAsset: true
+        ));
       }
     }
 
     // copy files
     for (var i = 0; i < filesToCopy.length; i++) {
-      var entry = filesToCopy.entries.toList()[i];
-      await Directory(path.dirname(entry.value)).create(recursive: true);
-      await File(entry.key).copy(entry.value);
+      var entry = filesToCopy[i];
+      await Directory(path.dirname(entry.to)).create(recursive: true);
+      if (entry.isAsset) {
+        await copyAssetToPath(entry.from, entry.to);
+      } else {
+        await File(entry.from).copy(entry.to);
+      }
+
       progress = (i + 1) / filesToCopy.length;
       installer.updateProgress();
     }
@@ -256,11 +205,10 @@ class _CopyRequiredFiles extends Procedure {
     await Directory(path.join(getMinecraftDirectoryPath(), "lib"))
         .create(recursive: true);
     // deobfuscation_data_1.5.2.zip
-    await File(path.join(
-      await getTempPath(),
-      "deobfuscation_data_1.5.2.zip",
-    )).copy(path.join(
-        getMinecraftDirectoryPath(), "lib", "deobfuscation_data_1.5.2.zip"));
+    await copyAssetToPath(
+      "assets/resources/deobfuscation_data_1.5.2.zip",
+      path.join(getMinecraftDirectoryPath(), "lib", "deobfuscation_data_1.5.2.zip"),
+    );
   }
 }
 
@@ -353,13 +301,7 @@ class _CompressFiles extends Procedure {
     )).create(recursive: true);
 
     for (var username in usernames) {
-      File(installer.skinPath.isNotEmpty
-          ? installer.skinPath
-          : path.join(
-        await getTempPath(),
-        "steve.png",
-      ))
-          .copy(path.join(
+      await copyAssetToPath("assets/resources/steve.png", path.join(
         await getTempPath(),
         "extracted",
         "jar",
@@ -392,11 +334,17 @@ class _ExtractVanillaSe extends Procedure {
   Future<void> execute() async {
     super.execute();
 
+    final resourcesTmpPath = path.join(await getTempPath(), "resources.zip");
+    final fmlLibsTmpPath = path.join(await getTempPath(), "fml_libs15.zip");
+
+    await copyAssetToPath("assets/resources/resources.zip", resourcesTmpPath);
+    await copyAssetToPath("assets/resources/fml_libs15.zip", fmlLibsTmpPath);
+
     final minecraftDir = getMinecraftDirectoryPath();
     final extracts = {
-      path.join(await getTempPath(), "resources.zip"): minecraftDir, // vanilla SE
+      resourcesTmpPath: minecraftDir, // vanilla SE
       installer.bgmPath: minecraftDir, // DQM BGM
-      path.join(await getTempPath(), "fml_libs15.zip"): path.join(minecraftDir, "lib"), // FML libs
+      fmlLibsTmpPath: path.join(minecraftDir, "lib"), // FML libs
     };
 
     await extractArchives(
@@ -467,18 +415,6 @@ class ProgressInfo {
   double overallProgress = 0;
   double currentProcedureProgress = 0;
   String currentProcedureTitle = "";
-}
-
-class DownloadableAsset {
-  final Uri url;
-  final int size;
-  final String md5;
-
-  const DownloadableAsset({
-    required this.url,
-    required this.size,
-    required this.md5,
-  });
 }
 
 enum DqmInstallationError {

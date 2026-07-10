@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dqm_installer_flt/messages.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
@@ -73,4 +74,9 @@ void saveErrorToFile(Object e, StackTrace? st) {
   File(path.join(path.dirname(Platform.resolvedExecutable),
           "error_${DateTime.now().toString().replaceAll(RegExp(":| "), "_")}.txt"))
       .writeAsStringSync("${e.toString()}\n${st.toString()}");
+}
+
+Future<void> copyAssetToPath(String assetKey, String path) async {
+  final data = await rootBundle.load(assetKey);
+  await File(path).writeAsBytes(data.buffer.asUint8List(), flush: true);
 }
