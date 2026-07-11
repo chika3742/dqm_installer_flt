@@ -47,7 +47,7 @@ jobs:
         id: compress
         shell: pwsh
         run: |
-          $FILENAME="dqm_installer_flt_${BUILD_NAME}_windows.zip"
+          $FILENAME="dqm_installer_flt_${env:BUILD_NAME}_windows.zip"
           echo "FILENAME=$FILENAME" >> "${env:GITHUB_OUTPUT}"
           
           # Copy Visual C++ runtime libraries
