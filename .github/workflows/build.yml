@@ -38,7 +38,7 @@ jobs:
         run: fvm flutter pub get
 
       - name: Build for Windows
-        run: fvm flutter build windows --build-name=$BUILD_NAME --build-number=$BUILD_NUMBER
+        run: fvm flutter build windows --build-name=${env:BUILD_NAME} --build-number=${env:BUILD_NUMBER}
         env:
           BUILD_NAME: ${{ needs.prepare.outputs.build-name }}
           BUILD_NUMBER: ${{ needs.prepare.outputs.build-number }}
