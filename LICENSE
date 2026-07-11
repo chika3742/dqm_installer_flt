@@ -1,3 +1,16 @@
+Exceptions:
+
+This license does not apply to the resources contained in the directories below:
+  - assets/7z/
+  - assets/external_mods/
+  - assets/resources/
+Resources contained in assets/7z/ are licensed under the terms described in
+License.txt, which is included after extracting the corresponding zip file.
+Rights to resources contained in assets/external_mods/ and assets/resources/
+belong to their respective authors.
+
+---
+
 MIT License
 
 Copyright (c) 2026 Chikamatsu Kazuya
