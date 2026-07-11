@@ -59,6 +59,7 @@ flutter:
     - assets/
     - assets/external_mods/
     - assets/resources/
+    - assets/fonts/OFL.txt
     - path: assets/7z/7z_windows.zip
       platforms: [windows]
     - path: assets/7z/7z_mac.zip
