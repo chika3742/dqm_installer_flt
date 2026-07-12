@@ -34,11 +34,13 @@ final List<AdditionalMod> additionalMods = [
       size: 196880,
       md5: "EB9D650CA8DCFF99F02F108E319F579A",
     ),
+    author: "Sm0keySa1m0n",
   ),
   AdditionalMod(
       "ChickenChunks",
       "チャンク読み込みMOD。これを使うと、別ディメンションにいるときでも薬草などが育ちます。\n"
           "チャンクローダーをクラフトする必要があります。クラフト方法はCraftGuideで調べてください。",
+      author: "Chicken Bones",
       mod: DownloadableAsset(
         url: Uri.parse("https://r2.chikach.net/dqm-assets/recommended-mods/ChickenChunks 1.3.2.14.jar"),
         size: 93761,
@@ -53,6 +55,7 @@ final List<AdditionalMod> additionalMods = [
       "CraftGuide",
       "全アイテムのクラフト方法を確認できます。DQMの攻略を進めるためにはほぼ必須と言っても過言ではありません。"
           "Gキーで開けます。",
+      author: "Uristqwerty",
       mod: DownloadableAsset(
         url: Uri.parse("https://r2.chikach.net/dqm-assets/recommended-mods/CraftGuide-1.6.7.3-modloader.zip"),
         size: 287669,
@@ -66,6 +69,7 @@ final List<AdditionalMod> additionalMods = [
       size: 181890,
       md5: "9ABB1A208511091A14AEB313A948B099",
     ),
+    author: "Kobata",
   ),
   AdditionalMod(
     "Multi Page Chest",
@@ -75,6 +79,7 @@ final List<AdditionalMod> additionalMods = [
       size: 25232,
       md5: "BCEFFA79B66FA82479DEE29EA0001D02",
     ),
+    author: "cubex2",
   ),
   AdditionalMod(
     "日本語MOD",
@@ -84,6 +89,7 @@ final List<AdditionalMod> additionalMods = [
       size: 98764,
       md5: "C0E324D3D76B377D4C241A38D2190909",
     ),
+    author: "wiro",
   ),
   AdditionalMod(
     "VoxelMap",
@@ -93,6 +99,7 @@ final List<AdditionalMod> additionalMods = [
       size: 435242,
       md5: "DC29DD2035FBC1B2151B3A73797B1D41",
     ),
+    author: "MamiyaOtaru",
   ),
   AdditionalMod(
     "Damage Indicators",
@@ -102,6 +109,7 @@ final List<AdditionalMod> additionalMods = [
       size: 292208,
       md5: "B781CC90B6AA50DDD3FD11388D8E34BB",
     ),
+    author: "rich1051414",
   ),
   AdditionalMod(
     "MineAll",
@@ -111,6 +119,7 @@ final List<AdditionalMod> additionalMods = [
       size: 12672,
       md5: "5D6636100D5915CF25CFC07B10492405",
     ),
+    author: "scalar",
   ),
   AdditionalMod(
     "CutAll",
@@ -120,6 +129,7 @@ final List<AdditionalMod> additionalMods = [
       size: 11443,
       md5: "2520FAAE983B776C617D4F29ECC31DB0",
     ),
+    author: "scalar",
   ),
   AdditionalMod(
     "DigAll",
@@ -129,6 +139,7 @@ final List<AdditionalMod> additionalMods = [
       size: 12648,
       md5: "F0F78B1CE7302965BE50C96BA6BE417E",
     ),
+    author: "scalar",
   ),
   AdditionalMod(
     "LookupID",
@@ -142,17 +153,24 @@ final List<AdditionalMod> additionalMods = [
       size: 1459,
       md5: "5D530906E8300C248D6A4DD7BC662875",
     ),
+    author: "scalar",
   ),
 ];
 
 class AdditionalMod {
   final String title;
   final String description;
+  final String author;
   final DownloadableAsset mod;
   final DownloadableAsset? coreMod;
 
-  const AdditionalMod(this.title, this.description,
-      {required this.mod, this.coreMod});
+  const AdditionalMod(
+    this.title,
+    this.description, {
+    required this.author,
+    required this.mod,
+    this.coreMod,
+  });
 
   List<DownloadableAsset> toFiles() {
     return [mod, if (coreMod != null) coreMod!];
