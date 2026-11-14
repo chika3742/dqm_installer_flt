@@ -7,7 +7,7 @@ publish_to: 'none'
 version: 0.0.0+0
 
 environment:
-  sdk: ^3.0.0
+  sdk: ^3.11.0
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -21,12 +21,12 @@ dependencies:
 
   timelines:
     path: ./packages/timelines
-  path: ^1.9.0
-  url_launcher: ^6.3.2
-  file_picker: ^10.3.3
-  http: ^1.5.0
-  path_provider: ^2.1.5
-  crypto: ^3.0.6
+  path: 1.9.1
+  url_launcher: 6.3.3
+  file_picker: 10.3.3
+  http: 1.6.0
+  path_provider: 2.1.6
+  crypto: 3.0.8
 
 dev_dependencies:
   flutter_test:
@@ -37,8 +37,8 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^6.0.0
-  pigeon: ^22.7.0
+  flutter_lints: 6.0.0
+  pigeon: 22.7.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
