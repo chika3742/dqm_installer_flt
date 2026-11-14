@@ -23,7 +23,7 @@ dependencies:
     path: ./packages/timelines
   path: 1.9.1
   url_launcher: 6.3.3
-  file_picker: 10.3.3
+  file_picker: 13.3.3
   http: 1.6.0
   path_provider: 2.1.6
   crypto: 3.0.8

@@ -268,7 +268,7 @@ class _HomePageState extends State<HomePage> {
                         child: const Text("フォルダーから自動的に認識"),
                         onPressed: () async {
                           var result =
-                              await FilePicker.platform.getDirectoryPath();
+                              await FilePicker.getDirectoryPath();
 
                           if (result != null) {
                             Directory(result).list().listen((event) {
@@ -561,11 +561,11 @@ class _FileFormField extends StatelessWidget {
           icon: const Icon(Icons.file_open),
           splashRadius: 24,
           onPressed: () async {
-            var result = await FilePicker.platform.pickFiles(
+            var result = await FilePicker.pickFile(
                 type: FileType.custom,
                 allowedExtensions: pickerAllowedExtensions);
             if (result != null) {
-              controller.text = result.files.single.path!;
+              controller.text = result.path!;
             }
           },
         )
