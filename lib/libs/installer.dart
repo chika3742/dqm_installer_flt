@@ -274,8 +274,6 @@ class _ExtractFiles extends Procedure {
   Future<void> execute() async {
     super.execute();
 
-    await setupSevenZip();
-
     final extracts = {
       installer.prerequisiteModPath: path.join(
         await getTempPath(),
