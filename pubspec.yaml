@@ -20,7 +20,9 @@ dependencies:
     sdk: flutter
 
   timelines:
-    path: ./packages/timelines
+    git:
+      url: https://github.com/chika3742/timelines.git
+      ref: e69571f8a6e17ad8e6a313067fc69fe898bf7f2a
   path: 1.9.1
   url_launcher: 6.3.3
   file_picker: 13.3.3
