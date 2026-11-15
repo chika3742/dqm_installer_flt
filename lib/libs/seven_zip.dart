@@ -27,6 +27,9 @@ Future<void> runSevenZip(
   void Function(String output)? onStdout,
 }) async {
   final exePath = getSevenZipExecutablePath();
+  if (Platform.isMacOS || Platform.isLinux) {
+    await Process.run("chmod", ["u+x", exePath]);
+  }
   log("Running: $exePath ${args.join(" ")}", level: 1);
   final process = await Process.start(
     exePath,
