@@ -29,6 +29,8 @@ dependencies:
   http: 1.6.0
   path_provider: 2.1.6
   crypto: 3.0.8
+  meta: 1.19.0
+  material_ui: 1.11.0
 
 dev_dependencies:
   flutter_test:

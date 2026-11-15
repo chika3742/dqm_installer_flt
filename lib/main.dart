@@ -1,7 +1,7 @@
 import 'package:dqm_installer_flt/pages/home.dart';
 import 'package:dqm_installer_flt/pages/installation_progress.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'utils/utils.dart';
 

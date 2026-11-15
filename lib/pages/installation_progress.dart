@@ -1,7 +1,7 @@
 import 'package:dqm_installer_flt/libs/installer.dart';
 import 'package:dqm_installer_flt/utils/ui.dart';
 import 'package:dqm_installer_flt/utils/utils.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class InstallationProgressPage extends StatefulWidget {
   const InstallationProgressPage(this.arguments, {super.key});
