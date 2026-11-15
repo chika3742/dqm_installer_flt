@@ -173,6 +173,6 @@ class AdditionalMod {
   });
 
   List<DownloadableAsset> toFiles() {
-    return [mod, if (coreMod != null) coreMod!];
+    return [mod, ?coreMod];
   }
 }

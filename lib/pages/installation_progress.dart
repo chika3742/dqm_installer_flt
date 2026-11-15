@@ -33,6 +33,7 @@ class _InstallationProgressPageState extends State<InstallationProgressPage> {
       setState(() {});
     };
     installer.install().then((value) {
+      if (!mounted) return;
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -54,6 +55,8 @@ class _InstallationProgressPageState extends State<InstallationProgressPage> {
     }).catchError((e, st) {
       debugPrint(e.toString());
       debugPrintStack(stackTrace: st);
+
+      if (!mounted) return;
 
       final String errorMessage;
 

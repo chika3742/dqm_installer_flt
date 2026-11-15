@@ -493,7 +493,7 @@ class _FlowTimeline extends StatelessWidget {
             ),
           );
         },
-        connectorBuilder: (_, __, ___) {
+        connectorBuilder: (_, _, _) {
           return const SolidLineConnector();
         },
         contentsBuilder: (_, index) {
